@@ -36,6 +36,7 @@ let threadId = 'bankrisk-' + Date.now()
 let messageHistory = []
 let assistedMsgIndex = -1
 let currentToolCalls = []
+let currentRunTexts = []
 
 const displayMessages = computed(() => messages)
 
@@ -77,6 +78,7 @@ async function runAgent() {
           currentAssistantContent.value = ''
           assistedMsgIndex = -1
           currentToolCalls.length = 0
+          currentRunTexts.length = 0
         },
         onTextMessageStart: (messageId) => {
           currentMessageId.value = messageId
@@ -94,23 +96,12 @@ async function runAgent() {
           currentAssistantContent.value += delta
         },
         onTextMessageEnd: (messageId) => {
+          // Accumulate text segments for this run
           const content = currentAssistantContent.value
-          if (content || currentToolCalls.length > 0) {
-            const msg = {
-              id: messageId || 'agent-' + Date.now(),
-              role: 'assistant',
-              content: content || ''
-            }
-            if (currentToolCalls.length > 0) {
-              msg.toolCalls = currentToolCalls.map(tc => ({
-                id: tc.id,
-                function: { name: tc.name, arguments: tc.arguments }
-              }))
-            }
-            messageHistory.push(msg)
+          if (content) {
+            currentRunTexts.push(content)
           }
           assistedMsgIndex = -1
-          currentToolCalls.length = 0
         },
         onToolCallStart: (toolCallId, toolName) => {
           assistedMsgIndex = -1
@@ -176,6 +167,24 @@ async function runAgent() {
             { id: 'err-' + Date.now(), role: 'tool', content: '❌ 错误: ' + String(error) })
         },
         onRunFinished: () => {
+          // Push assistant message with all text + tool calls to messageHistory
+          const fullText = currentRunTexts.join('')
+          if (fullText || currentToolCalls.length > 0) {
+            const msg = {
+              id: currentMessageId.value || 'agent-' + Date.now(),
+              role: 'assistant',
+              content: fullText
+            }
+            if (currentToolCalls.length > 0) {
+              msg.toolCalls = currentToolCalls.map(tc => ({
+                id: tc.id,
+                function: { name: tc.name, arguments: tc.arguments }
+              }))
+            }
+            messageHistory.push(msg)
+          }
+          currentRunTexts.length = 0
+          currentToolCalls.length = 0
           if (!pendingInteraction.value) finishRun()
         }
       }
