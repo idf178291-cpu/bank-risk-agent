@@ -4,20 +4,6 @@ export function useAguiClient(endpoint) {
   const isRunning = ref(false)
   let abortController = null
 
-  function buildMessagesPayload(messages) {
-    return messages.map(m => {
-      if (m.role === 'tool') {
-        return {
-          id: m.id,
-          role: 'tool',
-          toolCallId: m.toolCallId,
-          content: m.content
-        }
-      }
-      return { id: m.id, role: m.role, content: m.content }
-    })
-  }
-
   async function run(input, callbacks = {}) {
     isRunning.value = true
     abortController = new AbortController()
@@ -29,11 +15,7 @@ export function useAguiClient(endpoint) {
           'Content-Type': 'application/json',
           'Accept': 'text/event-stream'
         },
-        body: JSON.stringify({
-          threadId: input.threadId,
-          runId: input.runId,
-          messages: buildMessagesPayload(input.messages)
-        }),
+        body: JSON.stringify(input),
         signal: abortController.signal
       })
 
