@@ -1,6 +1,6 @@
 ---
 name: loan_classification
-description: Five-category loan classification system: criteria for Normal, Special Mention, Substandard, Doubtful, and Loss categories. Includes migration rules, provision requirements, and early warning signals.
+description: "Five-category loan classification system: criteria for Normal, Special Mention, Substandard, Doubtful, and Loss categories. Includes migration rules, provision requirements, and early warning signals."
 ---
 
 # 贷款五级分类标准

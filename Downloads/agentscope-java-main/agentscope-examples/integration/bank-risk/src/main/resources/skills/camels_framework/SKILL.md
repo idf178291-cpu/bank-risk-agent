@@ -1,6 +1,6 @@
 ---
 name: camels_framework
-description: CAMELS rating system for bank risk assessment: Capital Adequacy (C), Asset Quality (A), Management (M), Earnings (E), Liquidity (L), and Market Sensitivity (S). Includes evaluation methods, scoring criteria, and weight distribution.
+description: "CAMELS rating system for bank risk assessment: Capital Adequacy (C), Asset Quality (A), Management (M), Earnings (E), Liquidity (L), and Market Sensitivity (S). Includes evaluation methods, scoring criteria, and weight distribution."
 ---
 
 # CAMELS 银行评级体系

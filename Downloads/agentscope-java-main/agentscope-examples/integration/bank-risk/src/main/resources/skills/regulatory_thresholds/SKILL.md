@@ -1,6 +1,6 @@
 ---
 name: regulatory_thresholds
-description: Key regulatory thresholds and red lines for Chinese banking supervision. Covers capital adequacy, asset quality, liquidity, provisioning, and concentration risk limits with legal/regulatory references.
+description: "Key regulatory thresholds and red lines for Chinese banking supervision. Covers capital adequacy, asset quality, liquidity, provisioning, and concentration risk limits with legal/regulatory references."
 ---
 
 # 监管红线速查表
