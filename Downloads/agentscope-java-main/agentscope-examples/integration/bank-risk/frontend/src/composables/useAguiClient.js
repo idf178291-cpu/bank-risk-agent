@@ -7,6 +7,7 @@ export function useAguiClient(endpoint) {
   async function run(input, callbacks = {}) {
     isRunning.value = true
     abortController = new AbortController()
+    let reader
 
     try {
       const response = await fetch(endpoint, {
@@ -23,7 +24,7 @@ export function useAguiClient(endpoint) {
         throw new Error(`HTTP ${response.status} ${response.statusText}`)
       }
 
-      const reader = response.body.getReader()
+      reader = response.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
 
@@ -119,6 +120,9 @@ export function useAguiClient(endpoint) {
         break
       case 'TOOL_CALL_ARGS':
         callbacks.onToolCallArgs?.(event.toolCallId, event.delta)
+        break
+      case 'TOOL_CALL_RESULT':
+        callbacks.onToolCallResult?.(event.toolCallId, event.content)
         break
       case 'TOOL_CALL_END':
         callbacks.onToolCallEnd?.(event.toolCallId)
