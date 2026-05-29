@@ -35,6 +35,7 @@ const tempArgs = ref('')
 let threadId = 'bankrisk-' + Date.now()
 let messageHistory = []
 let assistedMsgIndex = -1
+let currentToolCalls = []
 
 const displayMessages = computed(() => messages)
 
@@ -62,6 +63,7 @@ async function runAgent() {
   tempArgs.value = ''
   pendingInteraction.value = null
   assistedMsgIndex = -1
+  currentToolCalls.length = 0
 
   try {
     await run(
@@ -74,6 +76,7 @@ async function runAgent() {
         onRunStarted: () => {
           currentAssistantContent.value = ''
           assistedMsgIndex = -1
+          currentToolCalls.length = 0
         },
         onTextMessageStart: (messageId) => {
           currentMessageId.value = messageId
@@ -92,14 +95,26 @@ async function runAgent() {
         },
         onTextMessageEnd: (messageId) => {
           const content = currentAssistantContent.value
-          if (content) {
-            messageHistory.push(
-              { id: messageId || 'agent-' + Date.now(), role: 'assistant', content })
+          if (content || currentToolCalls.length > 0) {
+            const msg = {
+              id: messageId || 'agent-' + Date.now(),
+              role: 'assistant',
+              content: content || ''
+            }
+            if (currentToolCalls.length > 0) {
+              msg.toolCalls = currentToolCalls.map(tc => ({
+                id: tc.id,
+                function: { name: tc.name, arguments: tc.arguments }
+              }))
+            }
+            messageHistory.push(msg)
           }
           assistedMsgIndex = -1
+          currentToolCalls.length = 0
         },
         onToolCallStart: (toolCallId, toolName) => {
           assistedMsgIndex = -1
+          currentToolCalls.push({ id: toolCallId, name: toolName, arguments: '' })
           if (toolName === 'ask_user') {
             pendingInteraction.value = {
               toolCallId, uiType: null, question: '',
@@ -114,6 +129,10 @@ async function runAgent() {
           }
         },
         onToolCallArgs: (toolCallId, delta) => {
+          // Track args for tool call history
+          const tc = currentToolCalls.find(t => t.id === toolCallId)
+          if (tc) tc.arguments += (delta || '')
+          // Track args for ask_user interaction
           if (pendingInteraction.value
               && pendingInteraction.value.toolCallId === toolCallId) {
             tempArgs.value += (delta || '')
@@ -138,6 +157,7 @@ async function runAgent() {
                 type: 'interaction',
                 interaction: { ...pendingInteraction.value }
               })
+              // Don't remove from messageHistory — wait for tool result
             } catch (e) {
               pendingInteraction.value = {
                 ...pendingInteraction.value,
