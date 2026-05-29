@@ -42,7 +42,12 @@ public class BankRiskApp {
             setIfPresent(env, "ANTHROPIC_BASE_URL");
             setIfPresent(env, "ANTHROPIC_AUTH_TOKEN");
             setIfPresent(env, "ANTHROPIC_MODEL");
-            setIfPresent(env, "ANTHROPIC_DEFAULT_OPUS_MODEL");
+
+            // Clean model name: strip [1m] suffix for OpenAI endpoint
+            Object modelObj = env.get("ANTHROPIC_DEFAULT_OPUS_MODEL");
+            if (modelObj instanceof String s && !s.isBlank()) {
+                System.setProperty("ANTHROPIC_DEFAULT_OPUS_MODEL", s.replace("[1m]", "").trim());
+            }
 
             log.info(
                     "Loaded model config from Claude Code settings: baseUrl={}, model={}",
