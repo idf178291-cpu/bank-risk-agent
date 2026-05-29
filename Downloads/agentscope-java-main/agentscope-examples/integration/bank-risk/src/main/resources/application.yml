@@ -9,12 +9,12 @@ agentscope:
   agent:
     enabled: true
   model:
-    provider: dashscope
-  dashscope:
-    api-key: ${DASHSCOPE_API_KEY}
-    model-name: qwen-plus
+    provider: anthropic
+  anthropic:
+    api-key: ${ANTHROPIC_AUTH_TOKEN}
+    base-url: ${ANTHROPIC_BASE_URL}
+    model-name: ${ANTHROPIC_MODEL}
     stream: true
-    enable-thinking: false
   agui:
     path-prefix: /agui
     cors-enabled: true
