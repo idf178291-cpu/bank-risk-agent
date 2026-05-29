@@ -6,6 +6,15 @@ spring:
     banner-mode: off
 
 agentscope:
+  agent:
+    enabled: true
+  model:
+    provider: dashscope
+  dashscope:
+    api-key: ${DASHSCOPE_API_KEY}
+    model-name: qwen-plus
+    stream: true
+    enable-thinking: false
   agui:
     path-prefix: /agui
     cors-enabled: true

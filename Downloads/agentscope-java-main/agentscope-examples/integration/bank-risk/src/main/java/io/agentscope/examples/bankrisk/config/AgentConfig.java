@@ -2,9 +2,8 @@ package io.agentscope.examples.bankrisk.config;
 
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.agent.Agent;
-import io.agentscope.core.formatter.dashscope.DashScopeChatFormatter;
 import io.agentscope.core.memory.InMemoryMemory;
-import io.agentscope.core.model.DashScopeChatModel;
+import io.agentscope.core.model.Model;
 import io.agentscope.core.skill.AgentSkill;
 import io.agentscope.core.skill.SkillBox;
 import io.agentscope.core.skill.repository.ClasspathSkillRepository;
@@ -100,18 +99,16 @@ public class AgentConfig {
 
     @Bean
     public AguiAgentRegistryCustomizer aguiAgentRegistryCustomizer(
-            SkillBox skillBox, Toolkit toolkit) {
+            SkillBox skillBox, Toolkit toolkit, Model model) {
         return registry -> {
-            registry.registerFactory("bank-risk", () -> createBankRiskAgent(skillBox, toolkit));
-            registry.registerFactory("default", () -> createBankRiskAgent(skillBox, toolkit));
+            registry.registerFactory(
+                    "bank-risk", () -> createBankRiskAgent(skillBox, toolkit, model));
+            registry.registerFactory(
+                    "default", () -> createBankRiskAgent(skillBox, toolkit, model));
         };
     }
 
-    private Agent createBankRiskAgent(SkillBox skillBox, Toolkit toolkit) {
-        String apiKey = System.getenv("DASHSCOPE_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) {
-            apiKey = System.getProperty("DASHSCOPE_API_KEY", "");
-        }
+    private Agent createBankRiskAgent(SkillBox skillBox, Toolkit toolkit, Model model) {
 
         // Register existing Java tools
         toolkit.registerTool(new UserInteractionTool());
@@ -142,12 +139,7 @@ public class AgentConfig {
         return ReActAgent.builder()
                 .name("BankRiskAgent")
                 .sysPrompt(SYS_PROMPT)
-                .model(
-                        DashScopeChatModel.builder().apiKey(apiKey).modelName("qwen-plus").stream(
-                                        true)
-                                .enableThinking(false)
-                                .formatter(new DashScopeChatFormatter())
-                                .build())
+                .model(model)
                 .toolkit(toolkit)
                 .skillBox(skillBox)
                 .memory(new InMemoryMemory())
