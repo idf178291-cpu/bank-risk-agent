@@ -123,16 +123,21 @@ public class AgentConfig {
         try {
             McpClientWrapper mcpClient =
                     McpClientBuilder.create("bank-risk-mcp")
-                            .sseTransport("http://localhost:8083/mcp/sse")
+                            .sseTransport("http://localhost:8083/sse")
                             .buildAsync()
                             .block();
             if (mcpClient != null) {
                 toolkit.registerMcpClient(mcpClient).block();
                 log.info("MCP client registered successfully");
             }
-        } catch (Exception e) {
-            log.error("Failed to register MCP client: {}", e.getMessage(), e);
+        } catch (Throwable e) {
+            log.warn(
+                    "Failed to register MCP client (agent will work without MCP tools): {}",
+                    e.getMessage());
         }
+
+        // Bind skillBox to toolkit (Toolkit is prototype-scoped, must rebind)
+        skillBox.bindToolkit(toolkit);
 
         return ReActAgent.builder()
                 .name("BankRiskAgent")
