@@ -144,6 +144,7 @@ public class AgentConfig {
                 .skillBox(skillBox)
                 .memory(new InMemoryMemory())
                 .maxIters(15)
+                .enablePendingToolRecovery(true)
                 .build();
     }
 }
