@@ -26,7 +26,7 @@ public class NegativeNewsTool {
     public String searchNegativeNews(Map<String, Object> args) {
         String enterpriseName = (String) args.get("enterprise_name");
         if (enterpriseName == null || enterpriseName.isBlank()) {
-            return "[{\"error\": \"enterprise_name is required\"}]";
+            return error("enterprise_name is required");
         }
 
         Object daysObj = args.get("days");
@@ -34,22 +34,20 @@ public class NegativeNewsTool {
 
         log.info("Searching negative news for: {} (last {} days)", enterpriseName, days);
 
-        Map<String, Object> enterpriseNews = dataLoader.getNegativeNews(enterpriseName);
-        if (enterpriseNews.isEmpty()) {
-            return "[{\"message\": \"No data found for enterprise: " + enterpriseName + "\"}]";
+        Object raw = dataLoader.getNegativeNews(enterpriseName);
+        if (raw == null) {
+            return message("No data found for enterprise: " + enterpriseName);
+        }
+        if (!(raw instanceof List)) {
+            return message("Unexpected data format for: " + enterpriseName);
+        }
+
+        List<Map<String, Object>> allNews = (List<Map<String, Object>>) raw;
+        if (allNews.isEmpty()) {
+            return message("No negative news found for: " + enterpriseName);
         }
 
         try {
-            Object newsObj = enterpriseNews.get(enterpriseName);
-            if (!(newsObj instanceof List)) {
-                return "[{\"message\": \"No negative news found for: " + enterpriseName + "\"}]";
-            }
-
-            List<Map<String, Object>> allNews = (List<Map<String, Object>>) newsObj;
-            if (allNews.isEmpty()) {
-                return "[{\"message\": \"No negative news found for: " + enterpriseName + "\"}]";
-            }
-
             List<Map<String, Object>> filtered;
             if (days < 365) {
                 String cutoffDate = java.time.LocalDate.now().minusDays(days).toString();
@@ -66,17 +64,21 @@ public class NegativeNewsTool {
             }
 
             if (filtered.isEmpty()) {
-                return "[{\"message\": \"No negative news in last "
-                        + days
-                        + " days for: "
-                        + enterpriseName
-                        + "\"}]";
+                return message("No negative news in last " + days + " days for: " + enterpriseName);
             }
 
             return mapper.writeValueAsString(filtered);
         } catch (Exception e) {
             log.error("Error searching negative news: {}", e.getMessage(), e);
-            return "[{\"error\": \"Internal error searching negative news\"}]";
+            return error("Internal error searching negative news");
         }
+    }
+
+    private static String error(String msg) {
+        return "[{\"error\": \"" + msg + "\"}]";
+    }
+
+    private static String message(String msg) {
+        return "[{\"message\": \"" + msg + "\"}]";
     }
 }

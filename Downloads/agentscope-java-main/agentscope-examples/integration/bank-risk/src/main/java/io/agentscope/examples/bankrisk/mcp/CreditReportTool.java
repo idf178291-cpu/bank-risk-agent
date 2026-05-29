@@ -21,6 +21,7 @@ public class CreditReportTool {
         this.dataLoader = dataLoader;
     }
 
+    @SuppressWarnings("unchecked")
     public String queryCreditReport(Map<String, Object> args) {
         String enterpriseName = (String) args.get("enterprise_name");
         if (enterpriseName == null || enterpriseName.isBlank()) {
@@ -30,10 +31,15 @@ public class CreditReportTool {
         String reportType = (String) args.getOrDefault("report_type", "full");
         log.info("Querying credit report for: {} (type: {})", enterpriseName, reportType);
 
-        Map<String, Object> report = dataLoader.getCreditReport(enterpriseName);
-        if (report.isEmpty()) {
-            return "[{\"message\": \"No credit report found for: " + enterpriseName + "\"}]";
+        Object raw = dataLoader.getCreditReport(enterpriseName);
+        if (raw == null) {
+            return message("No credit report found for: " + enterpriseName);
         }
+        if (!(raw instanceof Map)) {
+            return message("Unexpected data format for: " + enterpriseName);
+        }
+
+        Map<String, Object> report = (Map<String, Object>) raw;
 
         try {
             if ("summary".equalsIgnoreCase(reportType)) {
@@ -50,5 +56,9 @@ public class CreditReportTool {
             log.error("Error querying credit report: {}", e.getMessage(), e);
             return "[{\"error\": \"Internal error querying credit report\"}]";
         }
+    }
+
+    private static String message(String msg) {
+        return "[{\"message\": \"" + msg + "\"}]";
     }
 }

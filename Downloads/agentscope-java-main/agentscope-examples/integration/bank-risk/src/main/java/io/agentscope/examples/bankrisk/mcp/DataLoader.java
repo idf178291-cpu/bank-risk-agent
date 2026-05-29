@@ -95,15 +95,19 @@ public class DataLoader {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getNegativeNews(String enterpriseName) {
-        return (Map<String, Object>)
-                negativeNews.getOrDefault(enterpriseName, Collections.emptyMap());
+    /**
+     * Returns raw data for enterprise from negative_news.json.
+     * The returned value is a {@link List} of news items (from JSON array), or null.
+     */
+    public Object getNegativeNews(String enterpriseName) {
+        return negativeNews.get(enterpriseName);
     }
 
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getCreditReport(String enterpriseName) {
-        return (Map<String, Object>)
-                creditReports.getOrDefault(enterpriseName, Collections.emptyMap());
+    /**
+     * Returns raw data for enterprise from credit_reports.json.
+     * The returned value is a {@link Map} of credit report fields (from JSON object), or null.
+     */
+    public Object getCreditReport(String enterpriseName) {
+        return creditReports.get(enterpriseName);
     }
 }
