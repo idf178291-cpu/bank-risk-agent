@@ -6,6 +6,7 @@ import io.agentscope.examples.bankrisk.mcp.NegativeNewsTool;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.WebFluxSseServerTransportProvider;
+import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.ServerCapabilities;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
@@ -61,7 +62,10 @@ public class McpServerConfig {
                         null,
                         null,
                         null),
-                (ex, args) -> negativeNewsTool.searchNegativeNews((Map<String, Object>) args));
+                (ex, args) -> {
+                    String result = negativeNewsTool.searchNegativeNews((Map<String, Object>) args);
+                    return new CallToolResult(result, false);
+                });
 
         spec.tool(
                 new Tool(
@@ -74,7 +78,10 @@ public class McpServerConfig {
                         null,
                         null,
                         null),
-                (ex, args) -> creditReportTool.queryCreditReport((Map<String, Object>) args));
+                (ex, args) -> {
+                    String result = creditReportTool.queryCreditReport((Map<String, Object>) args);
+                    return new CallToolResult(result, false);
+                });
 
         log.info(
                 "MCP SyncServer registered with 2 tools: search_negative_news, "
