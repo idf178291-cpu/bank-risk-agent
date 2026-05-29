@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>银行风险管理 — 企业客户风险查询</title>
+<style>
+:root {
+  --bg: #020617; --surface: #0f172a; --border: #1e293b;
+  --text: #e2e8f0; --text-secondary: #94a3b8; --text-muted: #64748b;
+  --blue: #60a5fa; --emerald: #34d399; --violet: #a78bfa;
+  --amber: #fbbf24; --rose: #fb7185; --orange: #fb923c; --red: #ef4444;
+  --risk-low: #22c55e; --risk-watch: #eab308; --risk-high: #f97316; --risk-critical: #ef4444;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'JetBrains Mono', 'PingFang SC', monospace;
+  line-height: 1.6; height: 100vh; overflow: hidden;
+}
+.app { display: flex; height: 100vh; }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 260px; background: var(--surface); border-right: 1px solid var(--border);
+  padding: 20px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0;
+}
+.sidebar h2 { font-size: 14px; font-weight: 600; white-space: nowrap; }
+.sidebar .subtitle { font-size: 10px; color: var(--text-muted); margin-top: -8px; }
+.quick-btn {
+  padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-secondary); cursor: pointer;
+  font-family: inherit; font-size: 11px; text-align: left; transition: all 0.2s;
+}
+.quick-btn:hover { border-color: var(--blue); color: var(--blue); }
+.risk-legend { margin-top: auto; }
+.risk-legend h4 { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; }
+.risk-dot { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--text-secondary); padding: 3px 0; }
+.risk-dot::before { content: ''; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.risk-dot.low::before { background: var(--risk-low); }
+.risk-dot.watch::before { background: var(--risk-watch); }
+.risk-dot.high::before { background: var(--risk-high); }
+.risk-dot.critical::before { background: var(--risk-critical); }
+
+/* ===== MAIN ===== */
+.main {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
+
+/* ===== HEADER ===== */
+.header {
+  padding: 14px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.header .logo { font-size: 18px; }
+.header .title { font-weight: 600; font-size: 13px; }
+.status { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-muted); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; }
+.status-dot.idle { background: var(--text-muted); }
+.status-dot.running { background: var(--emerald); animation: pulse 1.5s infinite; }
+.status-dot.error { background: var(--rose); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ===== CHAT AREA ===== */
+.chat-area {
+  flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px;
+}
+.chat-area:empty::after {
+  content: '输入企业名称关键词开始风险查询...';
+  color: var(--text-muted); font-size: 13px; text-align: center; margin: auto;
+}
+
+/* ===== MESSAGE BUBBLES ===== */
+.msg { display: flex; gap: 10px; max-width: 85%; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.msg.user { flex-direction: row-reverse; align-self: flex-end; }
+.msg .avatar {
+  width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.msg.user .avatar { background: rgba(167,139,250,0.15); }
+.msg.agent .avatar { background: rgba(52,211,153,0.1); }
+.msg.tool .avatar { background: rgba(251,191,36,0.1); }
+.msg .bubble {
+  padding: 10px 14px; border-radius: 10px; font-size: 12px; line-height: 1.7;
+}
+.msg.user .bubble { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.25); border-bottom-right-radius: 4px; }
+.msg.agent .bubble { background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.15); border-bottom-left-radius: 4px; }
+.msg.tool .bubble { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.15); font-size: 10px; color: var(--text-secondary); }
+
+.msg.agent .bubble table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 11px; }
+.msg.agent .bubble th { background: rgba(30,41,59,0.6); padding: 7px 10px; text-align: left; color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border); }
+.msg.agent .bubble td { padding: 7px 10px; border-bottom: 1px solid rgba(30,41,59,0.3); }
+.msg.agent .bubble h2 { font-size: 16px; margin: 12px 0 8px; }
+.msg.agent .bubble h3 { font-size: 14px; margin: 10px 0 6px; }
+.msg.agent .bubble hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+.msg.agent .bubble ul, .msg.agent .bubble ol { padding-left: 20px; margin: 6px 0; }
+.msg.agent .bubble blockquote { border-left: 3px solid var(--blue); padding-left: 12px; color: var(--text-secondary); margin: 8px 0; }
+.msg.agent .bubble code { background: rgba(30,41,59,0.5); padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+
+/* ===== INTERACTION UI ===== */
+.interact-card {
+  background: var(--surface); border: 1px solid var(--amber); border-radius: 10px;
+  padding: 16px; margin: 8px 0; max-width: 85%; align-self: flex-start; animation: fadeIn 0.3s ease;
+}
+.interact-card .ic-label { font-size: 12px; margin-bottom: 12px; color: var(--amber); font-weight: 500; }
+.interact-card .ic-input { width: 100%; }
+.interact-card input[type="text"],
+.interact-card input[type="number"],
+.interact-card input[type="date"],
+.interact-card textarea {
+  width: 100%; padding: 10px 14px; background: rgba(2,6,23,0.6); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-family: inherit; font-size: 12px;
+}
+.interact-card input:focus, .interact-card textarea:focus { outline: none; border-color: var(--amber); }
+.interact-card textarea { min-height: 80px; resize: vertical; }
+.select-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.select-options button {
+  padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-secondary); cursor: pointer;
+  font-family: inherit; font-size: 11px; transition: all 0.15s;
+}
+.select-options button:hover { border-color: var(--amber); color: var(--amber); }
+.select-options button.selected { background: rgba(251,191,36,0.15); border-color: var(--amber); color: var(--amber); }
+.interact-submit {
+  margin-top: 10px; padding: 8px 20px; border-radius: 6px; border: none;
+  background: var(--amber); color: #020617; font-weight: 600;
+  font-family: inherit; font-size: 11px; cursor: pointer;
+}
+.interact-submit:hover { background: #f59e0b; }
+.interact-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== INPUT BAR ===== */
+.input-bar {
+  padding: 14px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px;
+}
+.input-bar input {
+  flex: 1; padding: 10px 16px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: inherit; font-size: 12px;
+}
+.input-bar input:focus { outline: none; border-color: var(--blue); }
+.input-bar button {
+  padding: 10px 22px; border: none; border-radius: 8px; font-family: inherit; font-size: 12px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-send { background: var(--blue); color: #020617; }
+.btn-send:hover { background: #3b82f6; }
+.btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-stop { background: var(--rose); color: white; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>🏦 银行风险管理</h2>
+    <div class="subtitle">AgentScope AG-UI Prototype</div>
+    <button class="quick-btn" onclick="quickQuery('农商')">🔍 查询农商银行</button>
+    <button class="quick-btn" onclick="quickQuery('城商')">🔍 查询城商银行</button>
+    <button class="quick-btn" onclick="quickQuery('股份制')">🔍 查询股份制银行</button>
+    <button class="quick-btn" onclick="quickQuery('村镇')">🔍 查询村镇银行</button>
+    <div class="risk-legend">
+      <h4>风险等级图例</h4>
+      <div class="risk-dot low">低风险 — 指标均达标</div>
+      <div class="risk-dot watch">关注 — 接近红线</div>
+      <div class="risk-dot high">高风险 — 部分超标</div>
+      <div class="risk-dot critical">严重 — 多项严重超标</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="header">
+      <span class="logo">🔍</span>
+      <span class="title">企业客户风险查询</span>
+      <div class="status">
+        <span class="status-dot idle" id="status-dot"></span>
+        <span id="status-text">就绪</span>
+      </div>
+    </div>
+
+    <div class="chat-area" id="chat"></div>
+
+    <div class="input-bar">
+      <input type="text" id="input" placeholder="输入企业名称关键词开始查询..." autocomplete="off">
+      <button class="btn-send" id="btn-send" onclick="sendMessage()">发送</button>
+      <button class="btn-stop" id="btn-stop" style="display:none;" onclick="stopRun()">⏹ 停止</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/agui-client.js"></script>
+<script>
+// ===== STATE =====
+const client = new AguiClient('/agui/run');
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+const btnSend = document.getElementById('btn-send');
+const btnStop = document.getElementById('btn-stop');
+const statusDot = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
+
+let threadId = 'bankrisk-' + Date.now();
+let messageHistory = [];
+let isRunning = false;
+let pendingInteraction = null; // { toolCallId, uiType, question, options, fields, allowOther, defaultValue }
+let currentAssistantDiv = null;
+let assistantContent = '';
+let currentMessageId = null;
+
+// ===== STATUS =====
+function setStatus(state, text) {
+  statusDot.className = 'status-dot ' + state;
+  statusText.textContent = text;
+}
+
+// ===== MESSAGES =====
+function addMessage(role, html) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const avatarMap = { user: '👤', agent: '🤖', tool: '🔧' };
+  div.innerHTML = `<div class="avatar">${avatarMap[role]}</div><div class="bubble">${html}</div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  if (role === 'agent') currentAssistantDiv = div.querySelector('.bubble');
+}
+
+function appendToAssistant(html) {
+  if (currentAssistantDiv) {
+    currentAssistantDiv.innerHTML += html;
+    chat.scrollTop = chat.scrollHeight;
+  }
+}
+
+function addRawHtml(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ===== INTERACTION UI =====
+function showInteraction(toolCallId, question, uiType, options, fields, allowOther, defaultValue) {
+  pendingInteraction = { toolCallId, uiType, question, options, fields, allowOther, defaultValue };
+
+  let html = `<div class="interact-card" id="interact-${toolCallId}">`;
+  html += `<div class="ic-label">💬 ${escapeHtml(question)}</div>`;
+
+  if (uiType === 'select' && options && options.length > 0) {
+    html += '<div class="select-options" id="sel-options">';
+    options.forEach((opt, i) => {
+      html += `<button onclick="selectOption(this, '${escapeHtml(opt)}', false)" data-value="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`;
+    });
+    if (allowOther) html += '<button onclick="selectOther()" style="border-style:dashed;">✏️ 其他...</button>';
+    html += '</div>';
+    html += `<div id="sel-other" style="display:none;margin-top:8px;"><input type="text" id="sel-other-input" placeholder="输入自定义值..."></div>`;
+  } else if (uiType === 'multi_select' && options && options.length > 0) {
+    html += '<div class="select-options" id="msel-options">';
+    options.forEach((opt, i) => {
+      html += `<button onclick="toggleMultiSelect(this)" data-value="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`;
+    });
+    html += '</div>';
+  } else if (uiType === 'confirm') {
+    html += '<div class="select-options"><button onclick="submitInteraction(\'yes\')" style="border-color:var(--emerald);color:var(--emerald);">✓ 确认</button><button onclick="submitInteraction(\'no\')" style="border-color:var(--rose);color:var(--rose);">✗ 取消</button></div>';
+    pendingInteraction._skipSubmit = true;
+  } else if (uiType === 'form' && fields && fields.length > 0) {
+    html += '<div class="ic-input">';
+    fields.forEach(f => {
+      const name = f.name || f.get ? f.get('name') : '';
+      const label = f.label || (f.get ? f.get('label') : '') || name;
+      const type = (f.type || (f.get ? f.get('type') : '') || 'text').toString();
+      const required = f.required || (f.get ? f.get('required') : false);
+      html += `<label style="display:block;font-size:10px;color:var(--text-muted);margin:6px 0 2px;">${escapeHtml(label)}${required?' *':''}</label>`;
+      if (type === 'select' && (f.options || (f.get ? f.get('options') : null))) {
+        const opts = f.options || (f.get ? f.get('options') : []);
+        html += '<select class="ic-input" data-field="'+escapeHtml(name)+'" style="padding:6px 8px;background:rgba(2,6,23,0.6);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:11px;width:100%;">';
+        opts.forEach(o => { html += `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`; });
+        html += '</select>';
+      } else if (type === 'textarea') {
+        html += `<textarea data-field="${escapeHtml(name)}" placeholder="${escapeHtml(f.placeholder||'')}"></textarea>`;
+      } else if (type === 'date') {
+        html += `<input type="date" data-field="${escapeHtml(name)}">`;
+      } else if (type === 'number') {
+        html += `<input type="number" data-field="${escapeHtml(name)}" min="${f.min||''}" max="${f.max||''}" step="${f.step||''}">`;
+      } else {
+        html += `<input type="text" data-field="${escapeHtml(name)}" placeholder="${escapeHtml(f.placeholder||'')}">`;
+      }
+    });
+    html += '</div>';
+  } else {
+    html += `<div class="ic-input"><input type="${uiType==='number'?'number':'text'}" id="interact-input" placeholder="输入..."></div>`;
+  }
+
+  if (!pendingInteraction._skipSubmit && uiType !== 'confirm') {
+    html += `<button class="interact-submit" onclick="submitInteraction()">提交</button>`;
+  }
+  html += '</div>';
+  addRawHtml(html);
+
+  // Try parse args from TOOL_CALL_ARGS event
+  pendingInteraction._parsedArgs = null;
+}
+
+let tempArgs = '';
+function appendToolArgs(delta) { tempArgs += delta; }
+
+// ===== SUBMIT INTERACTION =====
+function submitInteraction(value) {
+  if (!pendingInteraction) return;
+  let response;
+
+  if (value !== undefined) {
+    response = value;
+  } else {
+    const uiType = pendingInteraction.uiType;
+    if (uiType === 'select') {
+      const sel = document.querySelector('#sel-options .selected');
+      const otherInput = document.getElementById('sel-other-input');
+      response = otherInput && otherInput.value ? otherInput.value : (sel ? sel.dataset.value : '');
+    } else if (uiType === 'multi_select') {
+      const sels = document.querySelectorAll('#msel-options .selected');
+      response = Array.from(sels).map(b => b.dataset.value);
+    } else if (uiType === 'form') {
+      const fields = {};
+      document.querySelectorAll('[data-field]').forEach(el => {
+        fields[el.dataset.field] = el.value;
+      });
+      response = JSON.stringify(fields);
+    } else {
+      const inp = document.getElementById('interact-input');
+      response = inp ? inp.value : '';
+    }
+  }
+
+  if (!response || (Array.isArray(response) && response.length === 0)) {
+    return;
+  }
+
+  const respText = Array.isArray(response) ? response.join(', ') : String(response);
+
+  // Remove interaction card
+  const card = document.getElementById('interact-' + pendingInteraction.toolCallId);
+  if (card) card.remove();
+
+  // Send tool result
+  sendToolResult(pendingInteraction.toolCallId, respText);
+  pendingInteraction = null;
+  tempArgs = '';
+}
+
+function selectOption(btn, value, multi) {
+  if (multi) return; // handled by toggleMultiSelect
+  document.querySelectorAll('#sel-options button').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function selectOther() {
+  document.getElementById('sel-other').style.display = 'block';
+}
+
+function toggleMultiSelect(btn) {
+  btn.classList.toggle('selected');
+}
+
+// ===== SEND TOOL RESULT =====
+async function sendToolResult(toolCallId, response) {
+  setStatus('running', '提交中...');
+
+  const toolMsg = {
+    id: 'tool-' + Date.now(),
+    role: 'tool',
+    toolCallId: toolCallId,
+    content: response
+  };
+  messageHistory.push(toolMsg);
+
+  addMessage('user', '📤 <em>' + escapeHtml(response) + '</em>');
+
+  await runAgent(messageHistory);
+}
+
+// ===== SEND MESSAGE =====
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text || isRunning) return;
+  input.value = '';
+
+  const userMsg = { id: 'msg-' + Date.now(), role: 'user', content: text };
+  messageHistory.push(userMsg);
+  addMessage('user', escapeHtml(text));
+
+  await runAgent(messageHistory);
+}
+
+function quickQuery(keyword) {
+  input.value = '查询' + keyword + '银行的风险情况';
+  sendMessage();
+}
+
+// ===== RUN AGENT =====
+async function runAgent(messages) {
+  isRunning = true;
+  btnSend.style.display = 'none';
+  btnStop.style.display = 'inline-block';
+  setStatus('running', '分析中...');
+  currentAssistantDiv = null;
+  assistantContent = '';
+  currentMessageId = null;
+  tempArgs = '';
+
+  try {
+    await client.run({
+      threadId: threadId,
+      runId: 'run-' + Date.now(),
+      messages: messages
+    }, {
+      onRunStarted: () => {
+        currentAssistantDiv = null;
+        assistantContent = '';
+      },
+      onTextMessageStart: (messageId, role) => {
+        currentMessageId = messageId;
+        assistantContent = '';
+        currentAssistantDiv = null;
+      },
+      onTextContent: (delta) => {
+        if (!delta) return;
+        if (assistantContent === '') {
+          addMessage('agent', '');
+        }
+        appendToAssistant(escapeHtml(delta));
+        assistantContent += delta;
+      },
+      onTextMessageEnd: (messageId) => {
+        if (assistantContent) {
+          messageHistory.push({ id: messageId, role: 'assistant', content: assistantContent });
+        }
+        currentAssistantDiv = null;
+        // Render Markdown
+        renderMarkdownInLastBubble();
+      },
+      onToolCallStart: (toolCallId, toolName) => {
+        currentAssistantDiv = null;
+        if (toolName === 'ask_user') {
+          pendingInteraction = { toolCallId: toolCallId };
+          tempArgs = '';
+          addMessage('tool', '🔧 等待用户输入...');
+        } else {
+          addMessage('tool', '🔧 调用工具: ' + toolName);
+        }
+      },
+      onToolCallArgs: (toolCallId, delta) => {
+        if (pendingInteraction && pendingInteraction.toolCallId === toolCallId) {
+          tempArgs += (delta || '');
+        }
+      },
+      onToolCallEnd: (toolCallId) => {
+        if (pendingInteraction && pendingInteraction.toolCallId === toolCallId) {
+          try {
+            const args = JSON.parse(tempArgs);
+            showInteraction(
+              toolCallId,
+              args.question || '请提供信息',
+              args.ui_type || 'text',
+              args.options || [],
+              args.fields || [],
+              args.allow_other || false,
+              args.default_value
+            );
+          } catch (e) {
+            showInteraction(toolCallId, '请提供信息', 'text', [], [], false, null);
+          }
+          // Don't add to messageHistory - wait for tool result
+        }
+      },
+      onError: (error) => {
+        addMessage('tool', '❌ 错误: ' + escapeHtml(String(error)));
+      },
+      onRunFinished: () => {}
+    });
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      addMessage('tool', '❌ 请求失败: ' + escapeHtml(error.message));
+    }
+  } finally {
+    if (!pendingInteraction) {
+      isRunning = false;
+      btnSend.style.display = 'inline-block';
+      btnStop.style.display = 'none';
+      setStatus('idle', '就绪');
+    }
+  }
+}
+
+function stopRun() {
+  client.abort();
+  isRunning = false;
+  btnSend.style.display = 'inline-block';
+  btnStop.style.display = 'none';
+  setStatus('idle', '已停止');
+  pendingInteraction = null;
+  tempArgs = '';
+}
+
+// ===== MARKDOWN RENDERING =====
+function renderMarkdownInLastBubble() {
+  if (!currentAssistantDiv && !assistantContent) {
+    // try last agent bubble
+    const bubbles = chat.querySelectorAll('.msg.agent .bubble');
+    if (bubbles.length === 0) return;
+    const last = bubbles[bubbles.length - 1];
+    last.innerHTML = renderMarkdown(last.textContent);
+  }
+}
+
+function renderMarkdown(text) {
+  if (!text) return '';
+  let html = text;
+
+  // Risk level badges
+  html = html.replace(/\*\*(低风险|关注|高风险|严重)\*\*/g, (_, level) => {
+    const colors = { '低风险': 'var(--risk-low)', '关注': 'var(--risk-watch)', '高风险': 'var(--risk-high)', '严重': 'var(--risk-critical)' };
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:${colors[level]};background:${colors[level]}15;border:1px solid ${colors[level]}40;">${level}</span>`;
+  });
+  html = html.replace(/\*\*(✓ 达标|✗ 不达标|✗ 超标|✗ 不足)\*\*/g, (_, status) => {
+    const isPass = status.includes('✓');
+    return `<strong style="color:${isPass?'var(--emerald)':'var(--rose)'};">${status}</strong>`;
+  });
+
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1 style="font-size:18px;margin:16px 0 8px;">$1</h1>');
+
+  // Bold and italic
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Horizontal rules
+  html = html.replace(/^---$/gm, '<hr>');
+
+  // Blockquotes
+  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+
+  // Unordered lists
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+  // Simple tables: detect | header | pattern
+  const lines = html.split('\n');
+  let inTable = false, tableHtml = '', headerHtml = '', afterHeader = false;
+  const result = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('|') && line.endsWith('|')) {
+      if (!inTable) {
+        inTable = true;
+        headerHtml = '<tr>' + line.split('|').filter(c => c.trim()).map(c => '<th>' + c.trim() + '</th>').join('') + '</tr>';
+      } else if (line.match(/^\|[-:\s|]+\|$/)) {
+        afterHeader = true;
+      } else {
+        if (afterHeader && headerHtml) {
+          result.push('<table>' + headerHtml);
+          headerHtml = '';
+          afterHeader = false;
+        }
+        result.push('<tr>' + line.split('|').filter(c => c.trim()).map(c => '<td>' + c.trim() + '</td>').join('') + '</tr>');
+      }
+    } else {
+      if (inTable) {
+        result.push('</table>');
+        inTable = false; headerHtml = ''; afterHeader = false;
+      }
+      result.push(line);
+    }
+  }
+  if (inTable) result.push('</table>');
+  html = result.join('\n');
+
+  // Line breaks
+  html = html.replace(/\n\n/g, '<br><br>');
+
+  return html;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ===== KEYBOARD =====
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+input.focus();
+</script>
+</body>
+</html>
