@@ -13,7 +13,7 @@ agentscope:
   openai:
     api-key: ${ANTHROPIC_AUTH_TOKEN}
     base-url: https://api.deepseek.com/v1
-    model-name: ${ANTHROPIC_DEFAULT_OPUS_MODEL:deepseek-chat}
+    model-name: ${ANTHROPIC_DEFAULT_HAIKU_MODEL:deepseek-v4-flash}
     stream: true
   agui:
     path-prefix: /agui

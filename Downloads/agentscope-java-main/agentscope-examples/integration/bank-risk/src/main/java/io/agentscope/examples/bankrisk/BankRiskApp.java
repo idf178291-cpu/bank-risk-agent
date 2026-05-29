@@ -49,6 +49,12 @@ public class BankRiskApp {
                 System.setProperty("ANTHROPIC_DEFAULT_OPUS_MODEL", s.replace("[1m]", "").trim());
             }
 
+            // Also set haiku model (no thinking, suitable for tool calling)
+            Object haikuObj = env.get("ANTHROPIC_DEFAULT_HAIKU_MODEL");
+            if (haikuObj instanceof String s2 && !s2.isBlank()) {
+                System.setProperty("ANTHROPIC_DEFAULT_HAIKU_MODEL", s2.replace("[1m]", "").trim());
+            }
+
             log.info(
                     "Loaded model config from Claude Code settings: baseUrl={}, model={}",
                     env.get("ANTHROPIC_BASE_URL"),
