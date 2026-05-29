@@ -1,0 +1,214 @@
+<template>
+  <div class="app">
+    <RiskSidebar @quick-query="onQuickQuery" />
+    <div class="main">
+      <ChatHeader :status="agentStatus" />
+      <ChatArea
+        :messages="displayMessages"
+        @submit-interaction="onSubmitInteraction" />
+      <ChatInput
+        ref="chatInputRef"
+        :disabled="isRunning"
+        @send="sendMessage"
+        @stop="stopRun" />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, computed } from 'vue'
+import { useAguiClient } from './composables/useAguiClient.js'
+import RiskSidebar from './components/RiskSidebar.vue'
+import ChatHeader from './components/ChatHeader.vue'
+import ChatArea from './components/ChatArea.vue'
+import ChatInput from './components/ChatInput.vue'
+
+const { isRunning, run, abort } = useAguiClient('/agui/run')
+const chatInputRef = ref(null)
+const agentStatus = ref('idle')
+const messages = reactive([])
+const pendingInteraction = ref(null)
+const currentMessageId = ref(null)
+const currentAssistantContent = ref('')
+const tempArgs = ref('')
+
+let threadId = 'bankrisk-' + Date.now()
+let messageHistory = []
+let assistedMsgIndex = -1
+
+const displayMessages = computed(() => messages)
+
+function onQuickQuery(keyword) {
+  sendMessage('查询' + keyword + '银行的风险情况')
+}
+
+async function sendMessage(text) {
+  if (isRunning.value) return
+
+  const msgId = 'msg-' + Date.now()
+  const userMsg = { id: msgId, role: 'user', content: text }
+  messageHistory.push(userMsg)
+  messages.push({ id: msgId, role: 'user', content: text })
+
+  await runAgent()
+}
+
+async function runAgent() {
+  isRunning.value = true
+  agentStatus.value = 'running'
+  if (chatInputRef.value) chatInputRef.value.setRunning(true)
+  currentMessageId.value = null
+  currentAssistantContent.value = ''
+  tempArgs.value = ''
+  pendingInteraction.value = null
+  assistedMsgIndex = -1
+
+  try {
+    await run(
+      {
+        threadId: threadId,
+        runId: 'run-' + Date.now(),
+        messages: messageHistory
+      },
+      {
+        onRunStarted: () => {
+          currentAssistantContent.value = ''
+          assistedMsgIndex = -1
+        },
+        onTextMessageStart: (messageId) => {
+          currentMessageId.value = messageId
+          currentAssistantContent.value = ''
+          assistedMsgIndex = -1
+        },
+        onTextContent: (delta) => {
+          if (!delta) return
+          if (assistedMsgIndex === -1) {
+            const msgId = currentMessageId.value || 'agent-' + Date.now()
+            messages.push({ id: msgId, role: 'agent', content: '' })
+            assistedMsgIndex = messages.length - 1
+          }
+          messages[assistedMsgIndex].content += delta
+          currentAssistantContent.value += delta
+        },
+        onTextMessageEnd: (messageId) => {
+          const content = currentAssistantContent.value
+          if (content) {
+            messageHistory.push(
+              { id: messageId || 'agent-' + Date.now(), role: 'assistant', content })
+          }
+          assistedMsgIndex = -1
+        },
+        onToolCallStart: (toolCallId, toolName) => {
+          assistedMsgIndex = -1
+          if (toolName === 'ask_user') {
+            pendingInteraction.value = {
+              toolCallId, uiType: null, question: '',
+              options: [], fields: [], allowOther: false, defaultValue: null
+            }
+            tempArgs.value = ''
+            messages.push(
+              { id: 'tool-' + toolCallId, role: 'tool', content: '🔧 等待用户输入...' })
+          } else {
+            messages.push(
+              { id: 'tool-' + toolCallId, role: 'tool', content: '🔧 调用工具: ' + toolName })
+          }
+        },
+        onToolCallArgs: (toolCallId, delta) => {
+          if (pendingInteraction.value
+              && pendingInteraction.value.toolCallId === toolCallId) {
+            tempArgs.value += (delta || '')
+          }
+        },
+        onToolCallEnd: (toolCallId) => {
+          if (pendingInteraction.value
+              && pendingInteraction.value.toolCallId === toolCallId) {
+            try {
+              const args = JSON.parse(tempArgs.value)
+              pendingInteraction.value = {
+                ...pendingInteraction.value,
+                uiType: args.ui_type || 'text',
+                question: args.question || '请提供信息',
+                options: args.options || [],
+                fields: args.fields || [],
+                allowOther: args.allow_other || false,
+                defaultValue: args.default_value || null
+              }
+              messages.push({
+                id: 'interact-' + toolCallId,
+                type: 'interaction',
+                interaction: { ...pendingInteraction.value }
+              })
+            } catch (e) {
+              pendingInteraction.value = {
+                ...pendingInteraction.value,
+                uiType: 'text', question: '请提供信息'
+              }
+              messages.push({
+                id: 'interact-' + toolCallId,
+                type: 'interaction',
+                interaction: { ...pendingInteraction.value }
+              })
+            }
+          }
+        },
+        onError: (error) => {
+          messages.push(
+            { id: 'err-' + Date.now(), role: 'tool', content: '❌ 错误: ' + String(error) })
+        },
+        onRunFinished: () => {
+          if (!pendingInteraction.value) finishRun()
+        }
+      }
+    )
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      messages.push(
+        { id: 'err-' + Date.now(), role: 'tool', content: '❌ 请求失败: ' + error.message })
+    }
+    finishRun()
+  }
+}
+
+function finishRun() {
+  isRunning.value = false
+  agentStatus.value = 'idle'
+  if (chatInputRef.value) chatInputRef.value.setRunning(false)
+}
+
+function onSubmitInteraction(payload) {
+  if (!pendingInteraction.value) return
+
+  const { toolCallId, response } = payload
+  const respText = Array.isArray(response) ? response.join(', ') : String(response)
+
+  const toolMsg = {
+    id: 'tool-' + Date.now(),
+    role: 'tool',
+    toolCallId: toolCallId,
+    content: respText
+  }
+  messageHistory.push(toolMsg)
+  messages.push({ id: toolMsg.id, role: 'user', content: '📤 ' + respText })
+
+  const idx = messages.findIndex(m => m.id === 'interact-' + toolCallId)
+  if (idx !== -1) messages.splice(idx, 1)
+
+  pendingInteraction.value = null
+  tempArgs.value = ''
+
+  runAgent()
+}
+
+function stopRun() {
+  abort()
+  pendingInteraction.value = null
+  tempArgs.value = ''
+  finishRun()
+}
+</script>
+
+<style>
+.main {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
+</style>
