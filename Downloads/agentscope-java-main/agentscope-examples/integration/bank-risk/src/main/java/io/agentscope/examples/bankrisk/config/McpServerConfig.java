@@ -5,6 +5,8 @@ import io.agentscope.examples.bankrisk.mcp.DataLoader;
 import io.agentscope.examples.bankrisk.mcp.EnterpriseDetailTool;
 import io.agentscope.examples.bankrisk.mcp.EnterpriseSearchTool;
 import io.agentscope.examples.bankrisk.mcp.NegativeNewsTool;
+import io.agentscope.examples.bankrisk.tools.GenerateReportTool;
+import io.agentscope.examples.bankrisk.tools.RiskIndicatorTool;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.WebFluxSseServerTransportProvider;
@@ -30,12 +32,16 @@ public class McpServerConfig {
     private final CreditReportTool creditReportTool;
     private final EnterpriseSearchTool enterpriseSearchTool;
     private final EnterpriseDetailTool enterpriseDetailTool;
+    private final RiskIndicatorTool riskIndicatorTool;
+    private final GenerateReportTool generateReportTool;
 
     public McpServerConfig(DataLoader dataLoader) {
         this.negativeNewsTool = new NegativeNewsTool(dataLoader);
         this.creditReportTool = new CreditReportTool(dataLoader);
         this.enterpriseSearchTool = new EnterpriseSearchTool(dataLoader);
         this.enterpriseDetailTool = new EnterpriseDetailTool(dataLoader);
+        this.riskIndicatorTool = new RiskIndicatorTool();
+        this.generateReportTool = new GenerateReportTool();
     }
 
     @Bean
@@ -124,9 +130,52 @@ public class McpServerConfig {
                     return new CallToolResult(result, false);
                 });
 
+        spec.tool(
+                new Tool(
+                        "calculate_risk_indicators",
+                        null,
+                        "Calculate FICDG risk indicators for an enterprise."
+                                + " Financial health (F), Industry position (I), Compliance (C),"
+                                + " Debt risk (D), Governance (G). Returns each dimension with"
+                                + " industry benchmark comparisons.",
+                        calculateRiskIndicatorsSchema(),
+                        null,
+                        null,
+                        null),
+                (ex, args) -> {
+                    String result =
+                            riskIndicatorTool.calculate(
+                                    (String) ((Map<String, Object>) args).get("enterprise_name"),
+                                    (String) ((Map<String, Object>) args).get("dimensions"));
+                    return new CallToolResult(result, false);
+                });
+
+        spec.tool(
+                new Tool(
+                        "generate_risk_report",
+                        null,
+                        "Generate a comprehensive risk assessment report in Markdown format."
+                                + " Call this AFTER collecting all necessary data. The report"
+                                + " includes: executive summary, FICDG analysis, risk level"
+                                + " assessment, and risk mitigation recommendations.",
+                        generateRiskReportSchema(),
+                        null,
+                        null,
+                        null),
+                (ex, args) -> {
+                    String result =
+                            generateReportTool.generate(
+                                    (String) ((Map<String, Object>) args).get("enterprise_name"),
+                                    (String) ((Map<String, Object>) args).get("findings"),
+                                    (String) ((Map<String, Object>) args).get("risk_level"),
+                                    (String) ((Map<String, Object>) args).get("recommendations"));
+                    return new CallToolResult(result, false);
+                });
+
         log.info(
-                "MCP SyncServer registered with 4 tools: search_negative_news, "
-                        + "query_credit_report, search_enterprises, get_enterprise_detail");
+                "MCP SyncServer registered with 6 tools: search_negative_news, "
+                        + "query_credit_report, search_enterprises, get_enterprise_detail,"
+                        + " calculate_risk_indicators, generate_risk_report");
         return spec.build();
     }
 
@@ -183,5 +232,52 @@ public class McpServerConfig {
                         "description",
                         "Exact customer ID of the enterprise (e.g. CUST-001)"));
         return new JsonSchema("object", properties, List.of("customer_id"), null, null, null);
+    }
+
+    private static JsonSchema calculateRiskIndicatorsSchema() {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(
+                "enterprise_name",
+                Map.of("type", "string", "description", "Exact enterprise name"));
+        properties.put(
+                "dimensions",
+                Map.of(
+                        "type",
+                        "string",
+                        "description",
+                        "FICDG dimensions to analyze: F, I, C, D, G. Use ALL for all"
+                                + " dimensions."));
+        return new JsonSchema(
+                "object", properties, List.of("enterprise_name", "dimensions"), null, null, null);
+    }
+
+    private static JsonSchema generateRiskReportSchema() {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(
+                "enterprise_name", Map.of("type", "string", "description", "Enterprise name"));
+        properties.put(
+                "findings",
+                Map.of("type", "string", "description", "Key findings from risk analysis"));
+        properties.put(
+                "risk_level",
+                Map.of(
+                        "type",
+                        "string",
+                        "description",
+                        "Overall risk level: LOW, WATCH, HIGH, CRITICAL"));
+        properties.put(
+                "recommendations",
+                Map.of(
+                        "type",
+                        "string",
+                        "description",
+                        "Risk mitigation recommendations (one per line)"));
+        return new JsonSchema(
+                "object",
+                properties,
+                List.of("enterprise_name", "findings", "risk_level"),
+                null,
+                null,
+                null);
     }
 }

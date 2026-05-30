@@ -25,22 +25,28 @@ const quickQueries = ['新能源', '通信', '汽车', '房地产', '航空']
 
 <style scoped>
 .sidebar {
-  width: 260px; background: var(--surface); border-right: 1px solid var(--border);
-  padding: 20px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0;
+  width: 260px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 16px; flex-shrink: 0;
 }
-.sidebar h2 { font-size: 14px; font-weight: 600; white-space: nowrap; }
-.subtitle { font-size: 10px; color: var(--text-muted); margin-top: -8px; }
+.sidebar h2 { font-size: 14px; font-weight: 600; white-space: nowrap; color: #e4e4ec; }
+.subtitle { font-size: 10px; color: #7a7a8c; margin-top: -8px; }
 .quick-btn {
-  padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);
-  background: transparent; color: var(--text-secondary); cursor: pointer;
+  padding: 10px 14px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: transparent; color: #9a9aae; cursor: pointer;
   font-family: inherit; font-size: 11px; text-align: left; transition: all 0.2s;
 }
-.quick-btn:hover { border-color: var(--blue); color: var(--blue); }
+.quick-btn:hover {
+  border-color: var(--blue); color: #5eead4; background: rgba(15,118,110,0.1);
+}
 .risk-legend { margin-top: auto; }
-.risk-legend h4 { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; }
+.risk-legend h4 { font-size: 10px; color: #7a7a8c; margin-bottom: 8px; }
 .risk-dot {
   display: flex; align-items: center; gap: 8px; font-size: 10px;
-  color: var(--text-secondary); padding: 3px 0;
+  color: #9a9aae; padding: 3px 0;
 }
 .risk-dot::before { content: ''; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .risk-dot.low::before { background: var(--risk-low); }

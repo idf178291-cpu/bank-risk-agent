@@ -10,9 +10,6 @@ import io.agentscope.core.skill.repository.ClasspathSkillRepository;
 import io.agentscope.core.tool.Toolkit;
 import io.agentscope.core.tool.mcp.McpClientBuilder;
 import io.agentscope.core.tool.mcp.McpClientWrapper;
-import io.agentscope.examples.bankrisk.tools.GenerateReportTool;
-import io.agentscope.examples.bankrisk.tools.QueryEnterpriseTool;
-import io.agentscope.examples.bankrisk.tools.RiskIndicatorTool;
 import io.agentscope.examples.bankrisk.tools.UserInteractionTool;
 import io.agentscope.spring.boot.agui.common.AguiAgentRegistryCustomizer;
 import java.io.IOException;
@@ -46,10 +43,10 @@ public class AgentConfig {
                - ALL 全部分析
             5. 调用 search_negative_news (MCP) 查询企业近期负面舆情
             6. 调用 query_credit_report (MCP) 查询企业征信报告（使用 summary 类型获取概要）
-            7. 使用 calculate_risk_indicators 工具计算所选维度的风险指标
+            7. 使用 calculate_risk_indicators (MCP) 计算所选维度的风险指标
             8. 综合分析风险指标、负面舆情和征信报告结果
             9. 整理关键发现，使用 ask_user (ui_type="confirm") 询问是否需要生成完整报告
-            10. 若用户确认，使用 generate_risk_report 工具生成 Markdown 格式的完整风险评估报告
+            10. 若用户确认，使用 generate_risk_report (MCP) 生成 Markdown 格式的完整风险评估报告
 
             # 知识库使用
             - 你可以通过 load_skill 工具查阅风控知识库
@@ -104,11 +101,8 @@ public class AgentConfig {
 
     private Agent createBankRiskAgent(SkillBox skillBox, Toolkit toolkit, Model model) {
 
-        // Register existing Java tools
+        // Native tool: user interaction (suspend/resume — cannot be MCP)
         toolkit.registerTool(new UserInteractionTool());
-        toolkit.registerTool(new QueryEnterpriseTool());
-        toolkit.registerTool(new RiskIndicatorTool());
-        toolkit.registerTool(new GenerateReportTool());
 
         // Register MCP client (loopback to embedded MCP server in same JVM)
         try {
