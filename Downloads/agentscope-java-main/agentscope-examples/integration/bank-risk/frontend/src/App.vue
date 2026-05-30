@@ -37,6 +37,7 @@ let messageHistory = []
 let assistedMsgIndex = -1
 let currentToolCalls = []
 let currentRunTexts = []
+let currentToolResults = []
 
 const displayMessages = computed(() => messages)
 
@@ -79,6 +80,7 @@ async function runAgent() {
           assistedMsgIndex = -1
           currentToolCalls.length = 0
           currentRunTexts.length = 0
+          currentToolResults.length = 0
         },
         onTextMessageStart: (messageId) => {
           currentMessageId.value = messageId
@@ -127,6 +129,13 @@ async function runAgent() {
           if (pendingInteraction.value
               && pendingInteraction.value.toolCallId === toolCallId) {
             tempArgs.value += (delta || '')
+          }
+        },
+        onToolCallResult: (toolCallId, content) => {
+          // Capture tool result for non-ask_user tools
+          if (!pendingInteraction.value
+              || pendingInteraction.value.toolCallId !== toolCallId) {
+            currentToolResults.push({ toolCallId, content })
           }
         },
         onToolCallEnd: (toolCallId) => {
@@ -183,8 +192,18 @@ async function runAgent() {
             }
             messageHistory.push(msg)
           }
+          // Push tool results for executed tools (not ask_user)
+          for (const tr of currentToolResults) {
+            messageHistory.push({
+              id: 'tr-' + Date.now(),
+              role: 'tool',
+              toolCallId: tr.toolCallId,
+              content: tr.content
+            })
+          }
           currentRunTexts.length = 0
           currentToolCalls.length = 0
+          currentToolResults.length = 0
           if (!pendingInteraction.value) finishRun()
         }
       }
