@@ -38,11 +38,13 @@ let assistedMsgIndex = -1
 let currentToolCalls = []
 let currentRunTexts = []
 let currentToolResults = []
+let pendingAssistantMsg = null
+let finishedOnce = false
 
 const displayMessages = computed(() => messages)
 
 function onQuickQuery(keyword) {
-  sendMessage('查询' + keyword + '银行的风险情况')
+  sendMessage('查询' + keyword + '行业的企业风险情况')
 }
 
 async function sendMessage(text) {
@@ -66,6 +68,7 @@ async function runAgent() {
   pendingInteraction.value = null
   assistedMsgIndex = -1
   currentToolCalls.length = 0
+  finishedOnce = false
 
   try {
     await run(
@@ -176,30 +179,44 @@ async function runAgent() {
             { id: 'err-' + Date.now(), role: 'tool', content: '❌ 错误: ' + String(error) })
         },
         onRunFinished: () => {
-          // Push assistant message with all text + tool calls to messageHistory
+          // Guard against double-call (SSE RUN_FINISHED + finally block)
+          // Both carry the same result; ignore if already processed
+          if (finishedOnce) return
+          finishedOnce = true
           const fullText = currentRunTexts.join('')
-          if (fullText || currentToolCalls.length > 0) {
-            const msg = {
+          // Defer pushing to messageHistory if ask_user is pending:
+          // tool results must always follow tool calls in the same batch
+          if (pendingInteraction.value) {
+            pendingAssistantMsg = {
               id: currentMessageId.value || 'agent-' + Date.now(),
               role: 'assistant',
-              content: fullText
+              content: fullText,
+              toolCalls: currentToolCalls.slice(),
+              toolResults: currentToolResults.slice()
             }
-            if (currentToolCalls.length > 0) {
-              msg.toolCalls = currentToolCalls.map(tc => ({
-                id: tc.id,
-                function: { name: tc.name, arguments: tc.arguments }
-              }))
+          } else {
+            if (fullText || currentToolCalls.length > 0) {
+              const msg = {
+                id: currentMessageId.value || 'agent-' + Date.now(),
+                role: 'assistant',
+                content: fullText
+              }
+              if (currentToolCalls.length > 0) {
+                msg.toolCalls = currentToolCalls.map(tc => ({
+                  id: tc.id,
+                  function: { name: tc.name, arguments: tc.arguments }
+                }))
+              }
+              messageHistory.push(msg)
             }
-            messageHistory.push(msg)
-          }
-          // Push tool results for executed tools (not ask_user)
-          for (const tr of currentToolResults) {
-            messageHistory.push({
-              id: 'tr-' + Date.now(),
-              role: 'tool',
-              toolCallId: tr.toolCallId,
-              content: tr.content
-            })
+            for (const tr of currentToolResults) {
+              messageHistory.push({
+                id: 'tr-' + Date.now(),
+                role: 'tool',
+                toolCallId: tr.toolCallId,
+                content: tr.content
+              })
+            }
           }
           currentRunTexts.length = 0
           currentToolCalls.length = 0
@@ -228,6 +245,30 @@ function onSubmitInteraction(payload) {
 
   const { toolCallId, response } = payload
   const respText = Array.isArray(response) ? response.join(', ') : String(response)
+
+  // Flush pending assistant message + tool results deferred from onRunFinished
+  if (pendingAssistantMsg) {
+    messageHistory.push({
+      id: pendingAssistantMsg.id,
+      role: 'assistant',
+      content: pendingAssistantMsg.content,
+      toolCalls: pendingAssistantMsg.toolCalls.length > 0
+        ? pendingAssistantMsg.toolCalls.map(tc => ({
+          id: tc.id,
+          function: { name: tc.name, arguments: tc.arguments }
+        }))
+        : undefined
+    })
+    for (const tr of pendingAssistantMsg.toolResults) {
+      messageHistory.push({
+        id: 'tr-' + Date.now(),
+        role: 'tool',
+        toolCallId: tr.toolCallId,
+        content: tr.content
+      })
+    }
+    pendingAssistantMsg = null
+  }
 
   const toolMsg = {
     id: 'tool-' + Date.now(),
