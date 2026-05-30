@@ -105,7 +105,9 @@ public class DataLoader {
                 .filter(
                         e -> {
                             String name = (String) e.get("name");
-                            return name != null && name.toLowerCase().contains(kw);
+                            String industry = (String) e.get("industry");
+                            return (name != null && name.toLowerCase().contains(kw))
+                                    || (industry != null && industry.toLowerCase().contains(kw));
                         })
                 .collect(Collectors.toList());
     }

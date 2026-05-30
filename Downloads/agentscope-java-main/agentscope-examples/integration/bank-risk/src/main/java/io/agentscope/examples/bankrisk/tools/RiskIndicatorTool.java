@@ -7,40 +7,40 @@ import java.util.List;
 
 public class RiskIndicatorTool {
 
-    /**
-     * 监管阈值参考
-     */
-    private static final double CAR_MIN = 8.0;
-
-    private static final double NPL_MAX = 3.0;
-    private static final double PROVISION_MIN = 150.0;
-    private static final double LIQUIDITY_MIN = 25.0;
+    // Industry benchmarks for general enterprise assessment
+    private static final double ROA_GOOD = 5.0;
+    private static final double ROA_OK = 1.0;
+    private static final double GROSS_MARGIN_GOOD = 25.0;
+    private static final double GROSS_MARGIN_OK = 10.0;
+    private static final double DEBT_RATIO_SAFE = 50.0;
+    private static final double DEBT_RATIO_WARN = 70.0;
+    private static final double CURRENT_RATIO_SAFE = 2.0;
+    private static final double CURRENT_RATIO_WARN = 1.0;
 
     @Tool(
             name = "calculate_risk_indicators",
             description =
-                    "Calculate CAMELS risk indicators for a specific enterprise."
-                            + " Returns capital adequacy (C), asset quality (A), management (M),"
-                            + " earnings (E), liquidity (L), and market sensitivity (S) indicators"
-                            + " with regulatory threshold comparisons.")
+                    "Calculate FICDG risk indicators for an enterprise. Financial health (F),"
+                        + " Industry position (I), Compliance (C), Debt risk (D), Governance (G)."
+                        + " Returns each dimension with industry benchmark comparisons.")
     public String calculate(
             @ToolParam(name = "enterprise_name", description = "Exact enterprise name")
                     String enterpriseName,
             @ToolParam(
                             name = "dimensions",
                             description =
-                                    "CAMELS dimensions to analyze: C, A, M, E, L, S. Use ALL for"
-                                            + " all dimensions.")
+                                    "FICDG dimensions to analyze: F, I, C, D, G. Use ALL for all"
+                                            + " dimensions.")
                     String dimensions) {
 
         MockEnterpriseData.EnterpriseInfo e = MockEnterpriseData.get(enterpriseName);
         if (e == null) {
-            return "未找到企业: " + enterpriseName + "。请先使用 query_enterprise 查询。";
+            return "未找到企业: " + enterpriseName + "。请先使用 search_enterprises 查询。";
         }
 
         List<String> dims;
         if (dimensions == null || dimensions.equalsIgnoreCase("ALL")) {
-            dims = List.of("C", "A", "M", "E", "L", "S");
+            dims = List.of("F", "I", "C", "D", "G");
         } else {
             dims =
                     Arrays.stream(dimensions.split(","))
@@ -50,93 +50,119 @@ public class RiskIndicatorTool {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("## ").append(e.name()).append(" — CAMELS 风险指标分析\n\n");
+        sb.append("## ").append(e.name()).append(" — FICDG 风险指标分析\n\n");
 
         for (String dim : dims) {
             switch (dim) {
-                case "C" -> {
-                    sb.append("### C — 资本充足率 (Capital Adequacy)\n\n");
-                    sb.append("| 指标 | 当前值 | 监管要求 | 状态 |\n");
+                case "F" -> {
+                    sb.append("### F — 财务健康 (Financial Health)\n\n");
+                    sb.append("| 指标 | 当前值 | 行业基准 | 评估 |\n");
                     sb.append("|------|--------|----------|------|\n");
-                    String carStatus = e.carRatio() >= CAR_MIN ? "✓ 达标" : "✗ 不达标";
-                    sb.append("| 资本充足率 (CAR) | ")
-                            .append(String.format("%.1f%%", e.carRatio()))
-                            .append(" | ≥")
-                            .append(String.format("%.1f%%", CAR_MIN))
-                            .append(" | ")
-                            .append(carStatus)
-                            .append(" |\n");
-                    sb.append("\n");
-                }
-                case "A" -> {
-                    sb.append("### A — 资产质量 (Asset Quality)\n\n");
-                    sb.append("| 指标 | 当前值 | 监管要求 | 状态 |\n");
-                    sb.append("|------|--------|----------|------|\n");
-                    String nplStatus = e.nplRatio() <= NPL_MAX ? "✓ 达标" : "✗ 超标";
-                    sb.append("| 不良贷款率 (NPL) | ")
-                            .append(String.format("%.1f%%", e.nplRatio()))
-                            .append(" | ≤")
-                            .append(String.format("%.1f%%", NPL_MAX))
-                            .append(" | ")
-                            .append(nplStatus)
-                            .append(" |\n");
-                    String provStatus = e.provisionCoverage() >= PROVISION_MIN ? "✓ 达标" : "✗ 不足";
-                    sb.append("| 拨备覆盖率 | ")
-                            .append(String.format("%.1f%%", e.provisionCoverage()))
-                            .append(" | ≥")
-                            .append(String.format("%.1f%%", PROVISION_MIN))
-                            .append(" | ")
-                            .append(provStatus)
-                            .append(" |\n");
-                    sb.append("\n");
-                }
-                case "M" -> {
-                    sb.append("### M — 管理能力 (Management)\n\n");
-                    sb.append("| 指标 | 评估 |\n");
-                    sb.append("|------|------|\n");
-                    sb.append("| 风险标签 | ").append(String.join(", ", e.riskTags())).append(" |\n");
-                    sb.append("| 监管评级趋势 | 基于近期事件评估 |\n");
-                    sb.append("\n");
-                }
-                case "E" -> {
-                    sb.append("### E — 盈利能力 (Earnings)\n\n");
-                    sb.append("| 指标 | 当前值 | 评估 |\n");
-                    sb.append("|------|--------|------|\n");
-                    String roaEval = e.roa() >= 0.5 ? "良好" : e.roa() >= 0 ? "一般" : "亏损";
+                    String roaEval = e.roa() >= ROA_GOOD ? "优秀" : e.roa() >= ROA_OK ? "一般" : "预警";
                     sb.append("| ROA (资产收益率) | ")
                             .append(String.format("%.2f%%", e.roa()))
+                            .append(" | ≥")
+                            .append(String.format("%.0f%%", ROA_OK))
                             .append(" | ")
                             .append(roaEval)
                             .append(" |\n");
+
+                    double margin = e.liquidityRatio();
+                    String marginEval =
+                            margin >= GROSS_MARGIN_GOOD
+                                    ? "优秀"
+                                    : margin >= GROSS_MARGIN_OK ? "一般" : "预警";
+                    sb.append("| 毛利率 | ")
+                            .append(String.format("%.1f%%", margin))
+                            .append(" | ≥")
+                            .append(String.format("%.0f%%", GROSS_MARGIN_OK))
+                            .append(" | ")
+                            .append(marginEval)
+                            .append(" |\n");
+
+                    String growthEval = e.roa() >= ROA_GOOD ? "良好" : "需关注";
+                    sb.append("| 营收增长趋势 | — | — | ").append(growthEval).append(" |\n");
                     sb.append("\n");
                 }
-                case "L" -> {
-                    sb.append("### L — 流动性 (Liquidity)\n\n");
-                    sb.append("| 指标 | 当前值 | 监管要求 | 状态 |\n");
-                    sb.append("|------|--------|----------|------|\n");
-                    String liqStatus = e.liquidityRatio() >= LIQUIDITY_MIN ? "✓ 达标" : "✗ 不足";
-                    sb.append("| 流动性比率 | ")
-                            .append(String.format("%.1f%%", e.liquidityRatio()))
-                            .append(" | ≥")
-                            .append(String.format("%.1f%%", LIQUIDITY_MIN))
+                case "I" -> {
+                    sb.append("### I — 行业地位 (Industry Position)\n\n");
+                    sb.append("| 指标 | 评估 |\n");
+                    sb.append("|------|------|\n");
+                    sb.append("| 行业分类 | ").append(e.industry()).append(" |\n");
+                    sb.append("| 所在地区 | ").append(e.region()).append(" |\n");
+                    String pos;
+                    if (e.riskLevel().equals("LOW")) {
+                        pos = "行业龙头/领先地位";
+                    } else if (e.riskLevel().equals("WATCH")) {
+                        pos = "中等水平，面临竞争压力";
+                    } else {
+                        pos = "竞争力较弱，市场份额承压";
+                    }
+                    sb.append("| 竞争地位 | ").append(pos).append(" |\n");
+                    sb.append("\n");
+                }
+                case "C" -> {
+                    sb.append("### C — 合规与声誉 (Compliance & Reputation)\n\n");
+                    sb.append("| 指标 | 评估 |\n");
+                    sb.append("|------|------|\n");
+                    sb.append("| 风险标签 | ").append(String.join(", ", e.riskTags())).append(" |\n");
+                    sb.append("| 近期事件 | 见下方详细列表 |\n");
+                    sb.append("\n");
+                }
+                case "D" -> {
+                    sb.append("### D — 债务风险 (Debt Risk)\n\n");
+                    sb.append("| 指标 | 当前值 | 安全线 | 评估 |\n");
+                    sb.append("|------|--------|--------|------|\n");
+                    double debtRatio = 100.0 - e.carRatio();
+                    String debtEval =
+                            debtRatio <= DEBT_RATIO_SAFE
+                                    ? "安全"
+                                    : debtRatio <= DEBT_RATIO_WARN ? "关注" : "危险";
+                    sb.append("| 资产负债率 (估算) | ")
+                            .append(String.format("%.1f%%", debtRatio))
+                            .append(" | <")
+                            .append(String.format("%.0f%%", DEBT_RATIO_SAFE))
                             .append(" | ")
-                            .append(liqStatus)
+                            .append(debtEval)
+                            .append(" |\n");
+
+                    double currentRatio = e.provisionCoverage() / 100.0;
+                    String curEval =
+                            currentRatio >= CURRENT_RATIO_SAFE
+                                    ? "安全"
+                                    : currentRatio >= CURRENT_RATIO_WARN ? "关注" : "危险";
+                    sb.append("| 流动比率 (估算) | ")
+                            .append(String.format("%.2f", currentRatio))
+                            .append(" | >")
+                            .append(String.format("%.1f", CURRENT_RATIO_SAFE))
+                            .append(" | ")
+                            .append(curEval)
+                            .append(" |\n");
+
+                    String nplEval = e.nplRatio() <= 3.0 ? "安全" : "预警";
+                    sb.append("| 资产质量指标 | ")
+                            .append(String.format("%.1f%%", e.nplRatio()))
+                            .append(" | ≤3.0% | ")
+                            .append(nplEval)
                             .append(" |\n");
                     sb.append("\n");
                 }
-                case "S" -> {
-                    sb.append("### S — 市场敏感性 (Market Sensitivity)\n\n");
+                case "G" -> {
+                    sb.append("### G — 运营与治理 (Governance & Operations)\n\n");
                     sb.append("| 指标 | 评估 |\n");
                     sb.append("|------|------|\n");
-                    String sensitivity;
-                    if (e.riskLevel().equals("CRITICAL") || e.riskLevel().equals("HIGH")) {
-                        sensitivity = "高度敏感 — 信用评级可能面临下调压力";
+                    String gov;
+                    if (e.riskLevel().equals("LOW")) {
+                        gov = "治理结构健全，运营稳定";
                     } else if (e.riskLevel().equals("WATCH")) {
-                        sensitivity = "中度敏感 — 需关注利率和信用环境变化";
+                        gov = "存在个别治理瑕疵，需关注";
+                    } else if (e.riskLevel().equals("HIGH")) {
+                        gov = "治理存在明显缺陷";
                     } else {
-                        sensitivity = "低敏感 — 市场风险敞口可控";
+                        gov = "治理严重失序，运营面临中断风险";
                     }
-                    sb.append("| 市场风险评估 | ").append(sensitivity).append(" |\n");
+                    sb.append("| 治理评估 | ").append(gov).append(" |\n");
+                    sb.append("| 供应链风险 | 基于行业和地区评估 |\n");
                     sb.append("\n");
                 }
                 default -> sb.append("未知维度: ").append(dim).append("\n\n");
@@ -145,7 +171,7 @@ public class RiskIndicatorTool {
 
         sb.append("---\n");
         sb.append("**综合风险等级: ").append(e.riskLevelLabel()).append("**  \n");
-        sb.append("数据来源: 2025Q1 监管报告 + 公开财务数据\n");
+        sb.append("数据来源: 企业公开财务数据 + 征信报告 + 舆情监测\n");
         return sb.toString();
     }
 }

@@ -1,13 +1,13 @@
 <template>
   <div class="sidebar">
-    <h2>🏦 银行风险管理</h2>
+    <h2>企业风险管理</h2>
     <div class="subtitle">AgentScope AG-UI | Vue 3</div>
     <button
       v-for="q in quickQueries"
       :key="q"
       class="quick-btn"
       @click="$emit('quick-query', q)"
-    >🔍 查询{{ q }}银行</button>
+    >查询{{ q }}行业</button>
     <div class="risk-legend">
       <h4>风险等级图例</h4>
       <div class="risk-dot low">低风险 — 指标均达标</div>
@@ -20,7 +20,7 @@
 
 <script setup>
 defineEmits(['quick-query'])
-const quickQueries = ['农商', '城商', '股份制', '村镇']
+const quickQueries = ['新能源', '通信', '汽车', '房地产', '航空']
 </script>
 
 <style scoped>

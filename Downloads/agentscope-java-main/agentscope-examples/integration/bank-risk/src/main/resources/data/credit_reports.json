@@ -1,95 +1,141 @@
 {
-  "XX农商银行": {
-    "creditScore": 62,
-    "creditRating": "BBB-",
-    "reportDate": "2026-05-15",
-    "loanRecords": [
-      {"type": "流动资金贷款", "amount": 50000000, "status": "正常", "maturityDate": "2027-03-15"},
-      {"type": "固定资产贷款", "amount": 120000000, "status": "逾期", "maturityDate": "2026-01-20", "overdueDays": 129},
-      {"type": "银行承兑汇票", "amount": 30000000, "status": "正常", "maturityDate": "2026-09-30"}
-    ],
-    "guaranteeRecords": [
-      {"guaranteedEntity": "某房地产集团", "amount": 200000000, "type": "连带责任保证", "riskNote": "被担保方已出现债务违约"}
-    ],
-    "defaultRecords": [
-      {"date": "2026-01-20", "amount": 120000000, "description": "关联企业贷款违约，已启动法律追偿"}
-    ],
-    "creditQueryCount6m": 15,
-    "summary": "征信评分偏低，存在逾期贷款和担保代偿风险。近6个月征信查询频繁，反映融资压力较大。"
-  },
-  "BB农商银行": {
-    "creditScore": 48,
-    "creditRating": "BB",
+  "宁德时代新能源科技股份有限公司": {
+    "creditScore": 96,
+    "creditRating": "AAA",
     "reportDate": "2026-05-20",
     "loanRecords": [
-      {"type": "流动资金贷款", "amount": 30000000, "status": "逾期", "maturityDate": "2026-02-10", "overdueDays": 108},
-      {"type": "固定资产贷款", "amount": 80000000, "status": "逾期", "maturityDate": "2025-12-31", "overdueDays": 149},
-      {"type": "同业拆借", "amount": 50000000, "status": "展期", "maturityDate": "2026-08-15"}
-    ],
-    "guaranteeRecords": [
-      {"guaranteedEntity": "某矿业集团", "amount": 300000000, "type": "连带责任保证", "riskNote": "被担保方经营困难，代偿概率高"},
-      {"guaranteedEntity": "某贸易公司", "amount": 100000000, "type": "一般保证", "riskNote": "被担保方已列入失信名单"}
-    ],
-    "defaultRecords": [
-      {"date": "2026-02-10", "amount": 30000000, "description": "流动资金贷款逾期"},
-      {"date": "2025-12-31", "amount": 80000000, "description": "固定资产贷款违约"}
-    ],
-    "creditQueryCount6m": 22,
-    "summary": "征信评分严重偏低，多笔贷款逾期，担保代偿风险极高。征信查询频率异常，融资渠道可能已受限。"
-  },
-  "ZZ村镇银行": {
-    "creditScore": 72,
-    "creditRating": "BBB+",
-    "reportDate": "2026-05-10",
-    "loanRecords": [
-      {"type": "流动资金贷款", "amount": 15000000, "status": "正常", "maturityDate": "2027-06-30"},
-      {"type": "支农再贷款", "amount": 8000000, "status": "正常", "maturityDate": "2026-12-31"}
-    ],
-    "guaranteeRecords": [],
-    "defaultRecords": [],
-    "creditQueryCount6m": 5,
-    "summary": "征信记录总体正常，无违约记录。但贷款规模较小，抗风险能力有限。需关注股东质押比例较高的潜在治理风险。"
-  },
-  "CC城商银行": {
-    "creditScore": 78,
-    "creditRating": "A-",
-    "reportDate": "2026-05-05",
-    "loanRecords": [
-      {"type": "流动资金贷款", "amount": 200000000, "status": "正常", "maturityDate": "2027-12-31"},
-      {"type": "中期借贷便利", "amount": 500000000, "status": "正常", "maturityDate": "2027-03-15"}
-    ],
-    "guaranteeRecords": [
-      {"guaranteedEntity": "某城投公司", "amount": 150000000, "type": "一般保证", "riskNote": "城投公司经营正常，代偿风险低"}
-    ],
-    "defaultRecords": [],
-    "creditQueryCount6m": 3,
-    "summary": "征信记录良好，无违约历史。关注类贷款占比略有上升需关注，但整体信用风险可控。"
-  },
-  "YY城商银行": {
-    "creditScore": 92,
-    "creditRating": "AA",
-    "reportDate": "2026-05-01",
-    "loanRecords": [
-      {"type": "流动资金贷款", "amount": 300000000, "status": "正常", "maturityDate": "2027-12-31"},
-      {"type": "中期票据", "amount": 1000000000, "status": "正常", "maturityDate": "2028-06-30"}
+      {"type": "流动资金贷款", "amount": 3000000000, "status": "正常", "maturityDate": "2027-12-31"},
+      {"type": "中期票据", "amount": 5000000000, "status": "正常", "maturityDate": "2028-06-30"},
+      {"type": "绿色债券", "amount": 2000000000, "status": "正常", "maturityDate": "2029-03-15"}
     ],
     "guaranteeRecords": [],
     "defaultRecords": [],
     "creditQueryCount6m": 1,
-    "summary": "征信评级优秀，无任何违约或逾期记录。资产质量良好，偿债能力强。"
+    "summary": "征信评级最高等级，全球动力电池龙头。现金流充裕，偿债能力极强，无任何违约记录。"
   },
-  "AA股份制银行": {
-    "creditScore": 95,
+  "华为技术有限公司": {
+    "creditScore": 98,
     "creditRating": "AAA",
-    "reportDate": "2026-05-01",
+    "reportDate": "2026-05-15",
     "loanRecords": [
       {"type": "流动资金贷款", "amount": 5000000000, "status": "正常", "maturityDate": "2027-12-31"},
-      {"type": "永续债", "amount": 20000000000, "status": "正常", "maturityDate": "2029-12-31"},
-      {"type": "中期票据", "amount": 5000000000, "status": "正常", "maturityDate": "2028-06-30"}
+      {"type": "中期票据", "amount": 10000000000, "status": "正常", "maturityDate": "2028-09-30"}
     ],
     "guaranteeRecords": [],
     "defaultRecords": [],
     "creditQueryCount6m": 0,
-    "summary": "征信评级最高等级，资本充足，资产质量优秀，无任何风险记录。"
+    "summary": "征信评级最高等级，全球通信设备龙头。研发投入行业第一，财务极为稳健，无任何风险记录。"
+  },
+  "比亚迪股份有限公司": {
+    "creditScore": 88,
+    "creditRating": "AA",
+    "reportDate": "2026-05-10",
+    "loanRecords": [
+      {"type": "流动资金贷款", "amount": 8000000000, "status": "正常", "maturityDate": "2027-12-31"},
+      {"type": "中期票据", "amount": 5000000000, "status": "正常", "maturityDate": "2028-03-31"},
+      {"type": "固定资产贷款", "amount": 15000000000, "status": "正常", "maturityDate": "2029-06-30"}
+    ],
+    "guaranteeRecords": [],
+    "defaultRecords": [],
+    "creditQueryCount6m": 2,
+    "summary": "征信记录优秀，新能源车全球销量第一。营收增长强劲，但负债率偏高需关注。整体信用风险低。"
+  },
+  "恒大集团有限公司": {
+    "creditScore": 8,
+    "creditRating": "D",
+    "reportDate": "2026-05-25",
+    "loanRecords": [
+      {"type": "房地产开发贷款", "amount": 50000000000, "status": "违约", "maturityDate": "2023-06-30", "overdueDays": 1060},
+      {"type": "境外美元债", "amount": 150000000000, "status": "违约", "maturityDate": "2022-12-31", "overdueDays": 1241},
+      {"type": "信托贷款", "amount": 30000000000, "status": "违约", "maturityDate": "2023-03-31", "overdueDays": 1151},
+      {"type": "供应链融资", "amount": 20000000000, "status": "违约", "maturityDate": "2023-09-30", "overdueDays": 968}
+    ],
+    "guaranteeRecords": [
+      {"guaranteedEntity": "恒大汽车", "amount": 50000000000, "type": "连带责任保证", "riskNote": "被担保方已停摆，代偿概率100%"},
+      {"guaranteedEntity": "恒大物业", "amount": 20000000000, "type": "连带责任保证", "riskNote": "被担保方已被接管"},
+      {"guaranteedEntity": "恒大健康", "amount": 10000000000, "type": "一般保证", "riskNote": "被担保方已停止运营"}
+    ],
+    "defaultRecords": [
+      {"date": "2023-06-30", "amount": 50000000000, "description": "房地产开发贷款违约"},
+      {"date": "2022-12-31", "amount": 150000000000, "description": "境外美元债全面违约"},
+      {"date": "2023-03-31", "amount": 30000000000, "description": "信托贷款违约"},
+      {"date": "2023-09-30", "amount": 20000000000, "description": "供应链融资违约"}
+    ],
+    "creditQueryCount6m": 0,
+    "summary": "征信评级最低等级，已发生大规模债务违约。境外已进入清盘程序，境内多项目被接管。征信记录极差，融资能力已完全丧失。"
+  },
+  "海航集团有限公司": {
+    "creditScore": 35,
+    "creditRating": "CCC",
+    "reportDate": "2026-05-18",
+    "loanRecords": [
+      {"type": "银团贷款", "amount": 20000000000, "status": "展期", "maturityDate": "2028-12-31"},
+      {"type": "中期票据", "amount": 5000000000, "status": "展期", "maturityDate": "2027-06-30"},
+      {"type": "流动资金贷款", "amount": 3000000000, "status": "正常", "maturityDate": "2026-12-31"}
+    ],
+    "guaranteeRecords": [
+      {"guaranteedEntity": "海航航空", "amount": 15000000000, "type": "连带责任保证", "riskNote": "航空主业仍在亏损，代偿风险较高"}
+    ],
+    "defaultRecords": [
+      {"date": "2022-01-31", "amount": 80000000000, "description": "破产重整前大规模债务违约"}
+    ],
+    "creditQueryCount6m": 8,
+    "summary": "征信评级差，已完成破产重整但资产大幅缩水。多笔贷款展期，航空主业盈利能力不足。重整后清偿能力仍存疑。"
+  },
+  "清华同方股份有限公司": {
+    "creditScore": 65,
+    "creditRating": "BBB",
+    "reportDate": "2026-05-08",
+    "loanRecords": [
+      {"type": "流动资金贷款", "amount": 500000000, "status": "正常", "maturityDate": "2027-03-31"},
+      {"type": "固定资产贷款", "amount": 300000000, "status": "正常", "maturityDate": "2028-09-30"}
+    ],
+    "guaranteeRecords": [
+      {"guaranteedEntity": "同方威视", "amount": 200000000, "type": "一般保证", "riskNote": "子公司经营正常，代偿风险较低"}
+    ],
+    "defaultRecords": [],
+    "creditQueryCount6m": 4,
+    "summary": "征信评级中等偏下，无违约记录但盈利能力偏弱。应收账款周转慢，经营现金流承压。政府订单回款延迟是主要风险点。"
+  },
+  "隆基绿能科技股份有限公司": {
+    "creditScore": 90,
+    "creditRating": "AA+",
+    "reportDate": "2026-05-15",
+    "loanRecords": [
+      {"type": "流动资金贷款", "amount": 2000000000, "status": "正常", "maturityDate": "2027-12-31"},
+      {"type": "绿色债券", "amount": 3000000000, "status": "正常", "maturityDate": "2028-09-30"},
+      {"type": "中期票据", "amount": 2000000000, "status": "正常", "maturityDate": "2028-03-31"}
+    ],
+    "guaranteeRecords": [],
+    "defaultRecords": [],
+    "creditQueryCount6m": 2,
+    "summary": "征信评级优秀，全球光伏硅片龙头。BC电池技术领先，财务稳健，偿债能力强。海外产能布局合理。"
+  },
+  "阳光电源股份有限公司": {
+    "creditScore": 85,
+    "creditRating": "AA-",
+    "reportDate": "2026-05-12",
+    "loanRecords": [
+      {"type": "流动资金贷款", "amount": 1500000000, "status": "正常", "maturityDate": "2027-06-30"},
+      {"type": "固定资产贷款", "amount": 1000000000, "status": "正常", "maturityDate": "2028-12-31"}
+    ],
+    "guaranteeRecords": [],
+    "defaultRecords": [],
+    "creditQueryCount6m": 3,
+    "summary": "征信记录良好，逆变器全球市占率领先。储能业务增长迅猛，海外营收占比超过60%。整体信用风险低。"
+  },
+  "晶科能源股份有限公司": {
+    "creditScore": 68,
+    "creditRating": "BBB",
+    "reportDate": "2026-05-12",
+    "loanRecords": [
+      {"type": "流动资金贷款", "amount": 3000000000, "status": "正常", "maturityDate": "2027-06-30"},
+      {"type": "中期票据", "amount": 2000000000, "status": "正常", "maturityDate": "2028-03-31"},
+      {"type": "固定资产贷款", "amount": 5000000000, "status": "正常", "maturityDate": "2029-06-30"}
+    ],
+    "guaranteeRecords": [],
+    "defaultRecords": [],
+    "creditQueryCount6m": 6,
+    "summary": "征信评级中等，组件出货量全球前二。但负债率偏高，行业产能过剩导致毛利率下滑。经营性现金流为负，需持续关注。"
   }
 }

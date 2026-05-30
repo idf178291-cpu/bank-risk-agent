@@ -10,8 +10,8 @@ public class GenerateReportTool {
             description =
                     "Generate a comprehensive risk assessment report in Markdown format. Call this"
                             + " tool AFTER collecting all necessary data and user preferences. The"
-                            + " report includes: executive summary, detailed CAMELS analysis, risk"
-                            + " level assessment, and supervisory recommendations.")
+                            + " report includes: executive summary, FICDG analysis, risk level"
+                            + " assessment, and risk mitigation recommendations.")
     public String generate(
             @ToolParam(name = "enterprise_name", description = "Enterprise name")
                     String enterpriseName,
@@ -56,9 +56,9 @@ public class GenerateReportTool {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("# 🏦 ").append(enterpriseName).append(" — 企业客户风险评估报告\n\n");
+        sb.append("# ").append(enterpriseName).append(" — 企业风险评估报告\n\n");
 
-        sb.append("> 报告日期: 2026-05-28 | 数据截止: 2025Q1 | 评估框架: CAMELS\n\n");
+        sb.append("> 报告日期: 2026-05-30 | 评估框架: FICDG | 数据来源: 公开财务 + 征信 + 舆情\n\n");
 
         sb.append("## 一、综合风险评级\n\n");
         sb.append("<div style=\"padding:16px;border-radius:8px;background:")
@@ -77,37 +77,39 @@ public class GenerateReportTool {
         sb.append("| 项目 | 内容 |\n");
         sb.append("|------|------|\n");
         sb.append("| 企业名称 | ").append(e.name()).append(" |\n");
+        sb.append("| 客户编号 | ").append(e.customerId()).append(" |\n");
         sb.append("| 行业类型 | ").append(e.industry()).append(" |\n");
         sb.append("| 所在地区 | ").append(e.region()).append(" |\n");
         sb.append("| 风险标签 | ").append(String.join(", ", e.riskTags())).append(" |\n\n");
 
         sb.append("## 三、核心财务指标\n\n");
-        sb.append("| 指标 | 当前值 | 监管阈值 | 状态 |\n");
+        sb.append("| 指标 | 当前值 | 行业基准 | 状态 |\n");
         sb.append("|------|--------|----------|------|\n");
-        sb.append("| 资本充足率 (CAR) | ")
-                .append(String.format("%.1f%%", e.carRatio()))
-                .append(" | ≥8.0% | ")
-                .append(e.carRatio() >= 8.0 ? "✓" : "✗")
+        sb.append("| ROA (资产收益率) | ")
+                .append(String.format("%.2f%%", e.roa()))
+                .append(" | ≥3% | ")
+                .append(e.roa() >= 3.0 ? "良好" : e.roa() >= 1.0 ? "一般" : "预警")
                 .append(" |\n");
-        sb.append("| 不良贷款率 (NPL) | ")
+        sb.append("| 资产质量指标 | ")
                 .append(String.format("%.1f%%", e.nplRatio()))
-                .append(" | ≤3.0% | ")
+                .append(" | ≤3% | ")
                 .append(e.nplRatio() <= 3.0 ? "✓" : "✗")
                 .append(" |\n");
-        sb.append("| 拨备覆盖率 | ")
-                .append(String.format("%.1f%%", e.provisionCoverage()))
-                .append(" | ≥150% | ")
+        double debtRatio = 100.0 - e.carRatio();
+        sb.append("| 资产负债率 (估算) | ")
+                .append(String.format("%.1f%%", debtRatio))
+                .append(" | <70% | ")
+                .append(debtRatio <= 70.0 ? "✓" : "✗")
+                .append(" |\n");
+        sb.append("| 流动比率 (估算) | ")
+                .append(String.format("%.2f", e.provisionCoverage() / 100.0))
+                .append(" | >1.5 | ")
                 .append(e.provisionCoverage() >= 150.0 ? "✓" : "✗")
                 .append(" |\n");
-        sb.append("| 流动性比率 | ")
+        sb.append("| 毛利率 (估算) | ")
                 .append(String.format("%.1f%%", e.liquidityRatio()))
-                .append(" | ≥25% | ")
-                .append(e.liquidityRatio() >= 25.0 ? "✓" : "✗")
-                .append(" |\n");
-        sb.append("| 资产收益率 (ROA) | ")
-                .append(String.format("%.2f%%", e.roa()))
-                .append(" | — | ")
-                .append(e.roa() >= 0.5 ? "良好" : e.roa() >= 0 ? "一般" : "亏损")
+                .append(" | ≥10% | ")
+                .append(e.liquidityRatio() >= 10.0 ? "✓" : "✗")
                 .append(" |\n\n");
 
         sb.append("## 四、关键发现\n\n");
@@ -120,7 +122,7 @@ public class GenerateReportTool {
         sb.append("\n");
 
         if (recommendations != null && !recommendations.isBlank()) {
-            sb.append("## 六、监管建议\n\n");
+            sb.append("## 六、风险建议\n\n");
             for (String rec : recommendations.split("\n")) {
                 String trimmed = rec.trim();
                 if (!trimmed.isEmpty()) {
@@ -131,7 +133,7 @@ public class GenerateReportTool {
         }
 
         sb.append("---\n");
-        sb.append("*本报告由 BankRiskAgent 自动生成，仅供参考。最终决策请结合人工判断。*\n");
+        sb.append("*本报告由企业风险评估智能体自动生成，仅供参考。最终决策请结合人工判断。*\n");
         return sb.toString();
     }
 }
