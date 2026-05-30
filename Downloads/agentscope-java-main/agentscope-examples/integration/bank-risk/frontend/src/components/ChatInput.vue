@@ -48,7 +48,7 @@ defineExpose({ setRunning: (v) => { running.value = v } })
 .input-bar input:focus { outline: none; border-color: var(--blue); }
 .btn-send {
   padding: 10px 22px; border: none; border-radius: 8px; font-family: inherit; font-size: 12px;
-  font-weight: 600; cursor: pointer; background: var(--blue); color: #020617;
+  font-weight: 600; cursor: pointer; background: var(--blue); color: #fff;
 }
 .btn-send:hover { background: #3b82f6; }
 .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }

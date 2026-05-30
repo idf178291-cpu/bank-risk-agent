@@ -42,15 +42,15 @@ function submit() {
   background: transparent; color: var(--text-secondary); cursor: pointer;
   font-family: inherit; font-size: 11px; transition: all 0.15s;
 }
-.select-options button:hover { border-color: var(--amber); color: var(--amber); }
+.select-options button:hover { border-color: var(--blue); color: var(--blue); }
 .select-options button.selected {
-  background: var(--blue-glass); border-color: var(--amber); color: var(--amber);
+  background: var(--blue-glass); border-color: var(--blue); color: var(--blue);
 }
 .interact-submit {
   margin-top: 10px; padding: 8px 20px; border-radius: 6px; border: none;
-  background: var(--amber); color: #020617; font-weight: 600;
+  background: var(--violet); color: #fff; font-weight: 600;
   font-family: inherit; font-size: 11px; cursor: pointer;
 }
 .interact-submit:disabled { opacity: 0.4; cursor: not-allowed; }
-.interact-submit:hover:not(:disabled) { background: #f59e0b; }
+.interact-submit:hover:not(:disabled) { background: #6366f1; }
 </style>

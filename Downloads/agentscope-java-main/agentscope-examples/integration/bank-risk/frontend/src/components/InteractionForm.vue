@@ -52,12 +52,12 @@ function submit() {
   border-radius: 6px; color: var(--text); font-family: inherit; font-size: 11px;
 }
 .form-fields input:focus, .form-fields select:focus, .form-fields textarea:focus {
-  outline: none; border-color: var(--amber);
+  outline: none; border-color: var(--blue);
 }
 .interact-submit {
   margin-top: 10px; padding: 8px 20px; border-radius: 6px; border: none;
-  background: var(--amber); color: #020617; font-weight: 600;
+  background: var(--violet); color: #fff; font-weight: 600;
   font-family: inherit; font-size: 11px; cursor: pointer;
 }
-.interact-submit:hover { background: #f59e0b; }
+.interact-submit:hover { background: #6366f1; }
 </style>

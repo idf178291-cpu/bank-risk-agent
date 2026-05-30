@@ -53,8 +53,9 @@ function onSelect(value) {
 
 <style scoped>
 .interact-card {
-  background: var(--surface); border: 1px solid var(--amber); border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
   padding: 16px; margin: 8px 0; max-width: 85%;
+  border-left: 3px solid var(--blue);
 }
-.ic-label { font-size: 12px; margin-bottom: 12px; color: var(--amber); font-weight: 500; }
+.ic-label { font-size: 12px; margin-bottom: 12px; color: var(--text); font-weight: 500; }
 </style>

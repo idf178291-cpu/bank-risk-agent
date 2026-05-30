@@ -44,12 +44,12 @@ function submit() {
   width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--border);
   border-radius: 6px; color: var(--text); font-family: inherit; font-size: 12px;
 }
-.text-input input:focus { outline: none; border-color: var(--amber); }
+.text-input input:focus { outline: none; border-color: var(--blue); }
 .interact-submit {
   padding: 8px 20px; border-radius: 6px; border: none;
-  background: var(--amber); color: #020617; font-weight: 600;
+  background: var(--violet); color: #fff; font-weight: 600;
   font-family: inherit; font-size: 11px; cursor: pointer;
 }
 .interact-submit:disabled { opacity: 0.4; cursor: not-allowed; }
-.interact-submit:hover:not(:disabled) { background: #f59e0b; }
+.interact-submit:hover:not(:disabled) { background: #6366f1; }
 </style>

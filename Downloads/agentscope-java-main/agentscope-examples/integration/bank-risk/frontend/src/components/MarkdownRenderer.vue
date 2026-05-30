@@ -107,11 +107,11 @@ const renderedHtml = computed(() => renderMarkdown(props.content))
   width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 11px;
 }
 .markdown-body :deep(th) {
-  background: rgba(30,41,59,0.6); padding: 7px 10px; text-align: left;
+  background: var(--input-bg); padding: 7px 10px; text-align: left;
   color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border);
 }
 .markdown-body :deep(td) {
-  padding: 7px 10px; border-bottom: 1px solid rgba(30,41,59,0.3);
+  padding: 7px 10px; border-bottom: 1px solid var(--border);
 }
 .markdown-body :deep(h2) { font-size: 16px; margin: 12px 0 8px; }
 .markdown-body :deep(h3) { font-size: 14px; margin: 10px 0 6px; }
@@ -122,6 +122,6 @@ const renderedHtml = computed(() => renderMarkdown(props.content))
   color: var(--text-secondary); margin: 8px 0;
 }
 .markdown-body :deep(code) {
-  background: rgba(30,41,59,0.5); padding: 2px 6px; border-radius: 4px; font-size: 10px;
+  background: var(--input-bg); padding: 2px 6px; border-radius: 4px; font-size: 10px;
 }
 </style>

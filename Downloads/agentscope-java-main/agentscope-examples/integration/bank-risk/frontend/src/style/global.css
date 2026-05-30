@@ -1,30 +1,30 @@
 :root {
-  /* Cold Steel Blue — modern actuarial dashboard */
-  --bg: #0a0a0f;
-  --surface: #131320;
-  --border: #1e1e30;
-  --text: #e4e4f0;
-  --text-secondary: #8888aa;
-  --text-muted: #555577;
+  /* Light Steel Blue — clean professional light theme */
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --border: #dde4ed;
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
 
   /* Primary accents */
-  --blue: #38bdf8;
-  --emerald: #34d399;
-  --violet: #818cf8;
-  --amber: #f59e0b;
-  --rose: #fb7185;
-  --orange: #fb923c;
+  --blue: #2563eb;
+  --emerald: #10b981;
+  --violet: #6366f1;
+  --amber: #d97706;
+  --rose: #e11d48;
+  --orange: #ea580c;
 
   /* Risk level colors */
-  --risk-low: #34d399;
-  --risk-watch: #fbbf24;
-  --risk-high: #f97316;
-  --risk-critical: #ef4444;
+  --risk-low: #16a34a;
+  --risk-watch: #ca8a04;
+  --risk-high: #ea580c;
+  --risk-critical: #dc2626;
 
-  /* Surfaces with transparency */
-  --surface-hover: rgba(19, 19, 32, 0.8);
-  --blue-glass: rgba(56, 189, 248, 0.06);
-  --input-bg: rgba(10, 10, 15, 0.6);
+  /* Surfaces */
+  --surface-hover: #f8fafc;
+  --blue-glass: rgba(37, 99, 235, 0.06);
+  --input-bg: #f1f5f9;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -41,7 +41,6 @@ body {
 
 .app { display: flex; height: 100vh; }
 
-/* Smooth scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
