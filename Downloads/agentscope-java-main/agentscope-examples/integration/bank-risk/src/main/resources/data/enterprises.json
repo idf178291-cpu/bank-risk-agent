@@ -1,5 +1,6 @@
 [
   {
+    "customerId": "CUST-001",
     "name": "XX农商银行",
     "industry": "农村商业银行",
     "region": "华东",
@@ -14,6 +15,7 @@
     "riskLevelLabel": "高风险"
   },
   {
+    "customerId": "CUST-002",
     "name": "YY城商银行",
     "industry": "城市商业银行",
     "region": "华南",
@@ -28,6 +30,7 @@
     "riskLevelLabel": "低风险"
   },
   {
+    "customerId": "CUST-003",
     "name": "ZZ村镇银行",
     "industry": "村镇银行",
     "region": "华中",
@@ -42,6 +45,7 @@
     "riskLevelLabel": "关注"
   },
   {
+    "customerId": "CUST-004",
     "name": "AA股份制银行",
     "industry": "全国股份制商业银行",
     "region": "全国",
@@ -56,6 +60,7 @@
     "riskLevelLabel": "低风险"
   },
   {
+    "customerId": "CUST-005",
     "name": "BB农商银行",
     "industry": "农村商业银行",
     "region": "西南",
@@ -70,6 +75,7 @@
     "riskLevelLabel": "严重"
   },
   {
+    "customerId": "CUST-006",
     "name": "CC城商银行",
     "industry": "城市商业银行",
     "region": "华北",

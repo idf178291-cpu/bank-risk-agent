@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 public class MockEnterpriseData {
 
     public record EnterpriseInfo(
+            String customerId,
             String name,
             String industry,
             String region,
@@ -26,6 +27,7 @@ public class MockEnterpriseData {
     static {
         put(
                 new EnterpriseInfo(
+                        "CUST-001",
                         "XX农商银行",
                         "农村商业银行",
                         "华东",
@@ -41,6 +43,7 @@ public class MockEnterpriseData {
 
         put(
                 new EnterpriseInfo(
+                        "CUST-002",
                         "YY城商银行",
                         "城市商业银行",
                         "华南",
@@ -56,6 +59,7 @@ public class MockEnterpriseData {
 
         put(
                 new EnterpriseInfo(
+                        "CUST-003",
                         "ZZ村镇银行",
                         "村镇银行",
                         "华中",
@@ -71,6 +75,7 @@ public class MockEnterpriseData {
 
         put(
                 new EnterpriseInfo(
+                        "CUST-004",
                         "AA股份制银行",
                         "全国股份制商业银行",
                         "全国",
@@ -86,6 +91,7 @@ public class MockEnterpriseData {
 
         put(
                 new EnterpriseInfo(
+                        "CUST-005",
                         "BB农商银行",
                         "农村商业银行",
                         "西南",
@@ -101,6 +107,7 @@ public class MockEnterpriseData {
 
         put(
                 new EnterpriseInfo(
+                        "CUST-006",
                         "CC城商银行",
                         "城市商业银行",
                         "华北",

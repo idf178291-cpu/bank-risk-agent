@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -89,6 +90,30 @@ public class DataLoader {
     public Map<String, Object> getEnterprise(String name) {
         for (Map<String, Object> e : enterprises) {
             if (name.equals(e.get("name"))) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    public List<Map<String, Object>> searchEnterprises(String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            return Collections.unmodifiableList(enterprises);
+        }
+        String kw = keyword.trim().toLowerCase();
+        return enterprises.stream()
+                .filter(
+                        e -> {
+                            String name = (String) e.get("name");
+                            return name != null && name.toLowerCase().contains(kw);
+                        })
+                .collect(Collectors.toList());
+    }
+
+    public Map<String, Object> getEnterpriseByCustomerId(String customerId) {
+        if (customerId == null) return null;
+        for (Map<String, Object> e : enterprises) {
+            if (customerId.equals(e.get("customerId"))) {
                 return e;
             }
         }

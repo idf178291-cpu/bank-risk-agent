@@ -2,6 +2,8 @@ package io.agentscope.examples.bankrisk.config;
 
 import io.agentscope.examples.bankrisk.mcp.CreditReportTool;
 import io.agentscope.examples.bankrisk.mcp.DataLoader;
+import io.agentscope.examples.bankrisk.mcp.EnterpriseDetailTool;
+import io.agentscope.examples.bankrisk.mcp.EnterpriseSearchTool;
 import io.agentscope.examples.bankrisk.mcp.NegativeNewsTool;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
@@ -26,10 +28,14 @@ public class McpServerConfig {
 
     private final NegativeNewsTool negativeNewsTool;
     private final CreditReportTool creditReportTool;
+    private final EnterpriseSearchTool enterpriseSearchTool;
+    private final EnterpriseDetailTool enterpriseDetailTool;
 
     public McpServerConfig(DataLoader dataLoader) {
         this.negativeNewsTool = new NegativeNewsTool(dataLoader);
         this.creditReportTool = new CreditReportTool(dataLoader);
+        this.enterpriseSearchTool = new EnterpriseSearchTool(dataLoader);
+        this.enterpriseDetailTool = new EnterpriseDetailTool(dataLoader);
     }
 
     @Bean
@@ -83,9 +89,44 @@ public class McpServerConfig {
                     return new CallToolResult(result, false);
                 });
 
+        spec.tool(
+                new Tool(
+                        "search_enterprises",
+                        null,
+                        "Search for enterprises by keyword. Returns a JSON array of matching"
+                            + " enterprises with customerId and name. Supports fuzzy matching on"
+                            + " enterprise name. Use this to find the customerId for an"
+                            + " enterprise.",
+                        searchEnterprisesSchema(),
+                        null,
+                        null,
+                        null),
+                (ex, args) -> {
+                    String result =
+                            enterpriseSearchTool.searchEnterprises((Map<String, Object>) args);
+                    return new CallToolResult(result, false);
+                });
+
+        spec.tool(
+                new Tool(
+                        "get_enterprise_detail",
+                        null,
+                        "Get full enterprise detail by customer ID (e.g. CUST-001). "
+                                + "Returns all fields including financial indicators, risk tags, "
+                                + "and recent events.",
+                        getEnterpriseDetailSchema(),
+                        null,
+                        null,
+                        null),
+                (ex, args) -> {
+                    String result =
+                            enterpriseDetailTool.getEnterpriseDetail((Map<String, Object>) args);
+                    return new CallToolResult(result, false);
+                });
+
         log.info(
-                "MCP SyncServer registered with 2 tools: search_negative_news, "
-                        + "query_credit_report");
+                "MCP SyncServer registered with 4 tools: search_negative_news, "
+                        + "query_credit_report, search_enterprises, get_enterprise_detail");
         return spec.build();
     }
 
@@ -117,5 +158,30 @@ public class McpServerConfig {
                         "description",
                         "Report type: 'full' or 'summary' (default 'full')"));
         return new JsonSchema("object", properties, List.of("enterprise_name"), null, null, null);
+    }
+
+    private static JsonSchema searchEnterprisesSchema() {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(
+                "keyword",
+                Map.of(
+                        "type",
+                        "string",
+                        "description",
+                        "Enterprise name keyword (fuzzy, case-insensitive). "
+                                + "Empty returns all enterprises."));
+        return new JsonSchema("object", properties, List.of(), null, null, null);
+    }
+
+    private static JsonSchema getEnterpriseDetailSchema() {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(
+                "customer_id",
+                Map.of(
+                        "type",
+                        "string",
+                        "description",
+                        "Exact customer ID of the enterprise (e.g. CUST-001)"));
+        return new JsonSchema("object", properties, List.of("customer_id"), null, null, null);
     }
 }
