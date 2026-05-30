@@ -41,7 +41,7 @@ function submit() {
 <style scoped>
 .text-input { margin-bottom: 8px; }
 .text-input input {
-  width: 100%; padding: 10px 14px; background: rgba(2,6,23,0.6); border: 1px solid var(--border);
+  width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--border);
   border-radius: 6px; color: var(--text); font-family: inherit; font-size: 12px;
 }
 .text-input input:focus { outline: none; border-color: var(--amber); }

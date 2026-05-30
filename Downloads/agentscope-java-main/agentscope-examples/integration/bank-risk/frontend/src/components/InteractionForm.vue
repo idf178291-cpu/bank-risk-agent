@@ -48,7 +48,7 @@ function submit() {
   display: block; font-size: 10px; color: var(--text-muted); margin: 6px 0 2px;
 }
 .form-fields input, .form-fields select, .form-fields textarea {
-  width: 100%; padding: 6px 8px; background: rgba(2,6,23,0.6); border: 1px solid var(--border);
+  width: 100%; padding: 6px 8px; background: var(--input-bg); border: 1px solid var(--border);
   border-radius: 6px; color: var(--text); font-family: inherit; font-size: 11px;
 }
 .form-fields input:focus, .form-fields select:focus, .form-fields textarea:focus {

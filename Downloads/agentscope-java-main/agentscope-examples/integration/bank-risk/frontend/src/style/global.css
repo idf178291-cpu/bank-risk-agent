@@ -1,20 +1,51 @@
 :root {
-  --bg: #020617; --surface: #0f172a; --border: #1e293b;
-  --text: #e2e8f0; --text-secondary: #94a3b8; --text-muted: #64748b;
-  --blue: #60a5fa; --emerald: #34d399; --violet: #a78bfa;
-  --amber: #fbbf24; --rose: #fb7185; --orange: #fb923c; --red: #ef4444;
-  --risk-low: #22c55e; --risk-watch: #eab308; --risk-high: #f97316; --risk-critical: #ef4444;
+  /* Cold Steel Blue — modern actuarial dashboard */
+  --bg: #0a0a0f;
+  --surface: #131320;
+  --border: #1e1e30;
+  --text: #e4e4f0;
+  --text-secondary: #8888aa;
+  --text-muted: #555577;
+
+  /* Primary accents */
+  --blue: #38bdf8;
+  --emerald: #34d399;
+  --violet: #818cf8;
+  --amber: #f59e0b;
+  --rose: #fb7185;
+  --orange: #fb923c;
+
+  /* Risk level colors */
+  --risk-low: #34d399;
+  --risk-watch: #fbbf24;
+  --risk-high: #f97316;
+  --risk-critical: #ef4444;
+
+  /* Surfaces with transparency */
+  --surface-hover: rgba(19, 19, 32, 0.8);
+  --blue-glass: rgba(56, 189, 248, 0.06);
+  --input-bg: rgba(10, 10, 15, 0.6);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  background: var(--bg); color: var(--text);
-  font-family: 'JetBrains Mono', 'PingFang SC', monospace;
-  line-height: 1.6; height: 100vh; overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', 'PingFang SC', -apple-system, sans-serif;
+  line-height: 1.65;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 .app { display: flex; height: 100vh; }
+
+/* Smooth scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }

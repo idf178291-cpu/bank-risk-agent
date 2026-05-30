@@ -44,12 +44,12 @@ function submit() {
 }
 .select-options button:hover { border-color: var(--amber); color: var(--amber); }
 .select-options button.selected {
-  background: rgba(251,191,36,0.15); border-color: var(--amber); color: var(--amber);
+  background: var(--blue-glass); border-color: var(--amber); color: var(--amber);
 }
 .other-btn { border-style: dashed !important; }
 .other-input { margin-top: 8px; }
 .other-input input {
-  width: 100%; padding: 10px 14px; background: rgba(2,6,23,0.6); border: 1px solid var(--border);
+  width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--border);
   border-radius: 6px; color: var(--text); font-family: inherit; font-size: 12px;
 }
 .other-input input:focus { outline: none; border-color: var(--amber); }

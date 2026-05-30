@@ -44,7 +44,7 @@ function submit() {
 }
 .select-options button:hover { border-color: var(--amber); color: var(--amber); }
 .select-options button.selected {
-  background: rgba(251,191,36,0.15); border-color: var(--amber); color: var(--amber);
+  background: var(--blue-glass); border-color: var(--amber); color: var(--amber);
 }
 .interact-submit {
   margin-top: 10px; padding: 8px 20px; border-radius: 6px; border: none;
