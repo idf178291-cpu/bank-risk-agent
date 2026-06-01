@@ -40,8 +40,8 @@ public class McpServerConfig {
         this.creditReportTool = new CreditReportTool(dataLoader);
         this.enterpriseSearchTool = new EnterpriseSearchTool(dataLoader);
         this.enterpriseDetailTool = new EnterpriseDetailTool(dataLoader);
-        this.riskIndicatorTool = new RiskIndicatorTool();
-        this.generateReportTool = new GenerateReportTool();
+        this.riskIndicatorTool = new RiskIndicatorTool(dataLoader);
+        this.generateReportTool = new GenerateReportTool(dataLoader);
     }
 
     @Bean
