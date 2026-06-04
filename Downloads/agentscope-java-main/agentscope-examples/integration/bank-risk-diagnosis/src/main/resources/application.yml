@@ -1,0 +1,49 @@
+server:
+  port: 8085
+
+spring:
+  main:
+    banner-mode: off
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 200MB
+
+agentscope:
+  agent:
+    enabled: true
+  model:
+    provider: openai
+  openai:
+    api-key: ${ANTHROPIC_AUTH_TOKEN}
+    base-url: https://api.deepseek.com/v1
+    model-name: deepseek-chat
+    stream: true
+  agui:
+    path-prefix: /agui
+    cors-enabled: true
+    cors-allowed-origins:
+      - "*"
+    run-timeout: 30m
+    emit-state-events: true
+    emit-tool-call-args: true
+    default-agent-id: bank-risk-diagnosis
+    agent-id-header: X-Agent-Id
+    enable-path-routing: true
+    server-side-memory: false
+    max-thread-sessions: 100
+    session-timeout-minutes: 120
+    enable-reasoning: false
+  skill:
+    auto-load: false
+    expose-all-metadata: false
+
+diagnosis:
+  pipeline:
+    max-retries: 2
+
+logging:
+  level:
+    root: INFO
+    io.agentscope: DEBUG
+    io.agentscope.examples.bankriskdiagnosis: DEBUG
