@@ -1,6 +1,6 @@
 ---
-name: enterprise_benchmarks
-description: "Key financial benchmarks and risk thresholds for general enterprise risk assessment. Covers profitability, leverage, liquidity, and operational health indicators."
+name: regulatory_thresholds
+description: "Quantitative benchmark thresholds for enterprise risk indicators: profitability (ROA, ROE, gross margin), solvency (debt ratio, current ratio, interest coverage), operating efficiency (turnover days, cash flow), industry-specific reference values, and early warning trigger conditions."
 ---
 
 # 企业风险指标参考基准
