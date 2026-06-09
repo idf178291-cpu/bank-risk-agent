@@ -1,13 +1,11 @@
 package io.agentscope.examples.bankrisk.config;
 
 import io.agentscope.examples.bankrisk.mcp.AlertSearchTool;
-import io.agentscope.examples.bankrisk.mcp.CreditReportTool;
 import io.agentscope.examples.bankrisk.mcp.DataLoader;
 import io.agentscope.examples.bankrisk.mcp.EnterpriseDetailTool;
 import io.agentscope.examples.bankrisk.mcp.EnterpriseSearchTool;
 import io.agentscope.examples.bankrisk.mcp.NegativeNewsTool;
 import io.agentscope.examples.bankrisk.tools.GenerateReportTool;
-import io.agentscope.examples.bankrisk.tools.RiskIndicatorTool;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.WebFluxSseServerTransportProvider;
@@ -30,19 +28,15 @@ public class McpServerConfig {
     private static final Logger log = LoggerFactory.getLogger(McpServerConfig.class);
 
     private final NegativeNewsTool negativeNewsTool;
-    private final CreditReportTool creditReportTool;
     private final EnterpriseSearchTool enterpriseSearchTool;
     private final EnterpriseDetailTool enterpriseDetailTool;
-    private final RiskIndicatorTool riskIndicatorTool;
     private final GenerateReportTool generateReportTool;
     private final AlertSearchTool alertSearchTool;
 
     public McpServerConfig(DataLoader dataLoader) {
         this.negativeNewsTool = new NegativeNewsTool(dataLoader);
-        this.creditReportTool = new CreditReportTool(dataLoader);
         this.enterpriseSearchTool = new EnterpriseSearchTool(dataLoader);
         this.enterpriseDetailTool = new EnterpriseDetailTool(dataLoader);
-        this.riskIndicatorTool = new RiskIndicatorTool(dataLoader);
         this.generateReportTool = new GenerateReportTool(dataLoader);
         this.alertSearchTool = new AlertSearchTool(dataLoader);
     }
@@ -84,22 +78,6 @@ public class McpServerConfig {
 
         spec.tool(
                 new Tool(
-                        "query_credit_report",
-                        null,
-                        "Query credit report for an enterprise. "
-                                + "Returns credit score, rating, loan records, "
-                                + "guarantee records, default records, and summary.",
-                        queryCreditReportSchema(),
-                        null,
-                        null,
-                        null),
-                (ex, args) -> {
-                    String result = creditReportTool.queryCreditReport((Map<String, Object>) args);
-                    return new CallToolResult(result, false);
-                });
-
-        spec.tool(
-                new Tool(
                         "search_enterprises",
                         null,
                         "Search for enterprises by keyword. Returns a JSON array of matching"
@@ -135,32 +113,12 @@ public class McpServerConfig {
 
         spec.tool(
                 new Tool(
-                        "calculate_risk_indicators",
-                        null,
-                        "Calculate FICDG risk indicators for an enterprise."
-                                + " Financial health (F), Industry position (I), Compliance (C),"
-                                + " Debt risk (D), Governance (G). Returns each dimension with"
-                                + " industry benchmark comparisons.",
-                        calculateRiskIndicatorsSchema(),
-                        null,
-                        null,
-                        null),
-                (ex, args) -> {
-                    String result =
-                            riskIndicatorTool.calculate(
-                                    (String) ((Map<String, Object>) args).get("enterprise_name"),
-                                    (String) ((Map<String, Object>) args).get("dimensions"));
-                    return new CallToolResult(result, false);
-                });
-
-        spec.tool(
-                new Tool(
                         "generate_risk_report",
                         null,
-                        "Generate a comprehensive risk assessment report in Markdown format."
-                                + " Call this AFTER collecting all necessary data. The report"
-                                + " includes: executive summary, FICDG analysis, risk level"
-                                + " assessment, and risk mitigation recommendations.",
+                        "Generate a comprehensive risk assessment report in Markdown format. Call"
+                            + " this AFTER collecting all necessary data. The report includes:"
+                            + " executive summary, risk dimension analysis, risk level assessment,"
+                            + " and risk mitigation recommendations.",
                         generateRiskReportSchema(),
                         null,
                         null,
@@ -194,9 +152,9 @@ public class McpServerConfig {
                 });
 
         log.info(
-                "MCP SyncServer registered with 7 tools: search_negative_news, "
-                        + "query_credit_report, search_enterprises, get_enterprise_detail,"
-                        + " calculate_risk_indicators, generate_risk_report, search_alerts");
+                "MCP SyncServer registered with 5 tools: search_negative_news, "
+                        + "search_enterprises, get_enterprise_detail,"
+                        + " generate_risk_report, search_alerts");
         return spec.build();
     }
 
@@ -212,21 +170,6 @@ public class McpServerConfig {
                         "integer",
                         "description",
                         "Number of days to look back (default 90)"));
-        return new JsonSchema("object", properties, List.of("enterprise_name"), null, null, null);
-    }
-
-    private static JsonSchema queryCreditReportSchema() {
-        Map<String, Object> properties = new HashMap<>();
-        properties.put(
-                "enterprise_name",
-                Map.of("type", "string", "description", "Enterprise name to query"));
-        properties.put(
-                "report_type",
-                Map.of(
-                        "type",
-                        "string",
-                        "description",
-                        "Report type: 'full' or 'summary' (default 'full')"));
         return new JsonSchema("object", properties, List.of("enterprise_name"), null, null, null);
     }
 
@@ -253,23 +196,6 @@ public class McpServerConfig {
                         "description",
                         "Exact customer ID of the enterprise (e.g. CUST-001)"));
         return new JsonSchema("object", properties, List.of("customer_id"), null, null, null);
-    }
-
-    private static JsonSchema calculateRiskIndicatorsSchema() {
-        Map<String, Object> properties = new HashMap<>();
-        properties.put(
-                "enterprise_name",
-                Map.of("type", "string", "description", "Exact enterprise name"));
-        properties.put(
-                "dimensions",
-                Map.of(
-                        "type",
-                        "string",
-                        "description",
-                        "FICDG dimensions to analyze: F, I, C, D, G. Use ALL for all"
-                                + " dimensions."));
-        return new JsonSchema(
-                "object", properties, List.of("enterprise_name", "dimensions"), null, null, null);
     }
 
     private static JsonSchema searchAlertsSchema() {
