@@ -1,10 +1,13 @@
 package io.agentscope.examples.bankrisk.config;
 
+import io.agentscope.examples.bankrisk.controller.ReportController;
 import io.agentscope.examples.bankrisk.mcp.AlertSearchTool;
 import io.agentscope.examples.bankrisk.mcp.DataLoader;
 import io.agentscope.examples.bankrisk.mcp.EnterpriseDetailTool;
 import io.agentscope.examples.bankrisk.mcp.EnterpriseSearchTool;
 import io.agentscope.examples.bankrisk.mcp.NegativeNewsTool;
+import io.agentscope.examples.bankrisk.mcp.ParseDocumentTool;
+import io.agentscope.examples.bankrisk.service.SessionStore;
 import io.agentscope.examples.bankrisk.tools.GenerateReportTool;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
@@ -32,13 +35,15 @@ public class McpServerConfig {
     private final EnterpriseDetailTool enterpriseDetailTool;
     private final GenerateReportTool generateReportTool;
     private final AlertSearchTool alertSearchTool;
+    private final ParseDocumentTool parseDocumentTool;
 
-    public McpServerConfig(DataLoader dataLoader) {
+    public McpServerConfig(DataLoader dataLoader, SessionStore sessionStore) {
         this.negativeNewsTool = new NegativeNewsTool(dataLoader);
         this.enterpriseSearchTool = new EnterpriseSearchTool(dataLoader);
         this.enterpriseDetailTool = new EnterpriseDetailTool(dataLoader);
         this.generateReportTool = new GenerateReportTool(dataLoader);
         this.alertSearchTool = new AlertSearchTool(dataLoader);
+        this.parseDocumentTool = new ParseDocumentTool(sessionStore);
     }
 
     @Bean
@@ -151,10 +156,49 @@ public class McpServerConfig {
                     return new CallToolResult(result, false);
                 });
 
+        spec.tool(
+                new Tool(
+                        "parse_documents",
+                        null,
+                        "Get all parsed text content for a document upload session. "
+                                + "Returns concatenated text from all uploaded files "
+                                + "(Word/Excel/OFD) with file markers, plus session metadata "
+                                + "(institution name, source file list, total char count). "
+                                + "Call this after the user uploads files to get the full "
+                                + "text for analysis.",
+                        parseDocumentsSchema(),
+                        null,
+                        null,
+                        null),
+                (ex, args) -> {
+                    String result = parseDocumentTool.parseDocuments((Map<String, Object>) args);
+                    return new CallToolResult(result, false);
+                });
+
+        spec.tool(
+                new Tool(
+                        "save_report_html",
+                        null,
+                        "Save an HTML report and return a URL for viewing. "
+                                + "Accepts the complete HTML content of a risk report, "
+                                + "saves it, and returns a URL that can be opened in browser.",
+                        saveReportHtmlSchema(),
+                        null,
+                        null,
+                        null),
+                (ex, args) -> {
+                    String html = (String) ((Map<String, Object>) args).get("html_content");
+                    String id = ReportController.save(html);
+                    String url = "http://localhost:5173/api/reports/" + id;
+                    return new CallToolResult(
+                            "{\"report_id\":\"" + id + "\",\"url\":\"" + url + "\"}", false);
+                });
+
         log.info(
-                "MCP SyncServer registered with 5 tools: search_negative_news, "
+                "MCP SyncServer registered with 7 tools: search_negative_news, "
                         + "search_enterprises, get_enterprise_detail,"
-                        + " generate_risk_report, search_alerts");
+                        + " generate_risk_report, search_alerts, parse_documents,"
+                        + " save_report_html");
         return spec.build();
     }
 
@@ -218,6 +262,26 @@ public class McpServerConfig {
                         "description",
                         "Optional filter by alert level: 红色, 橙色, 蓝色"));
         return new JsonSchema("object", properties, List.of("enterprise_name"), null, null, null);
+    }
+
+    private static JsonSchema parseDocumentsSchema() {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(
+                "session_id",
+                Map.of("type", "string", "description", "Upload session ID from file upload"));
+        return new JsonSchema("object", properties, List.of("session_id"), null, null, null);
+    }
+
+    private static JsonSchema saveReportHtmlSchema() {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(
+                "html_content",
+                Map.of(
+                        "type",
+                        "string",
+                        "description",
+                        "Complete HTML content of the report to save"));
+        return new JsonSchema("object", properties, List.of("html_content"), null, null, null);
     }
 
     private static JsonSchema generateRiskReportSchema() {

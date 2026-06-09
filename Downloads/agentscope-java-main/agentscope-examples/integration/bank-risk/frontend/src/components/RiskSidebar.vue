@@ -2,25 +2,12 @@
   <div class="sidebar">
     <h2>企业风险管理</h2>
     <div class="subtitle">AgentScope AG-UI | Vue 3</div>
-    <button
-      v-for="q in quickQueries"
-      :key="q"
-      class="quick-btn"
-      @click="$emit('quick-query', q)"
-    >查询{{ q }}行业</button>
-    <div class="risk-legend">
-      <h4>风险等级图例</h4>
-      <div class="risk-dot low">低风险 — 指标均达标</div>
-      <div class="risk-dot watch">关注 — 接近红线</div>
-      <div class="risk-dot high">高风险 — 部分超标</div>
-      <div class="risk-dot critical">严重 — 多项严重超标</div>
-    </div>
+    <button class="upload-btn" @click="$emit('upload-doc')">📂 上传文档分析</button>
   </div>
 </template>
 
 <script setup>
-defineEmits(['quick-query'])
-const quickQueries = ['新能源', '通信', '汽车', '房地产', '航空']
+defineEmits(['upload-doc'])
 </script>
 
 <style scoped>
@@ -33,24 +20,14 @@ const quickQueries = ['新能源', '通信', '汽车', '房地产', '航空']
 }
 .sidebar h2 { font-size: 14px; font-weight: 600; white-space: nowrap; color: #e4e4ec; }
 .subtitle { font-size: 10px; color: #7a7a8c; margin-top: -8px; }
-.quick-btn {
+.upload-btn {
   padding: 10px 14px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: transparent; color: #9a9aae; cursor: pointer;
-  font-family: inherit; font-size: 11px; text-align: left; transition: all 0.2s;
+  border: 1px dashed rgba(255,255,255,0.15);
+  background: transparent; color: #8be; cursor: pointer;
+  font-family: inherit; font-size: 12px; text-align: center; transition: all 0.2s;
+  margin-top: 16px;
 }
-.quick-btn:hover {
-  border-color: var(--blue); color: #5eead4; background: rgba(15,118,110,0.1);
+.upload-btn:hover {
+  border-color: #4a6cf7; background: rgba(74,108,247,0.1);
 }
-.risk-legend { margin-top: auto; }
-.risk-legend h4 { font-size: 10px; color: #7a7a8c; margin-bottom: 8px; }
-.risk-dot {
-  display: flex; align-items: center; gap: 8px; font-size: 10px;
-  color: #9a9aae; padding: 3px 0;
-}
-.risk-dot::before { content: ''; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.risk-dot.low::before { background: var(--risk-low); }
-.risk-dot.watch::before { background: var(--risk-watch); }
-.risk-dot.high::before { background: var(--risk-high); }
-.risk-dot.critical::before { background: var(--risk-critical); }
 </style>

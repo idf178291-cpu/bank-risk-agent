@@ -8,6 +8,7 @@
       :disabled="disabled"
       @keydown.enter.prevent="send"
     />
+    <button class="btn-upload" @click="$emit('upload-doc')" title="上传文档">📂</button>
     <button v-if="!running" class="btn-send" @click="send"
       :disabled="!text.trim()">发送</button>
     <button v-else class="btn-stop" @click="$emit('stop')">⏹ 停止</button>
@@ -20,7 +21,7 @@ import { ref } from 'vue'
 const props = defineProps({
   disabled: { type: Boolean, default: false }
 })
-const emit = defineEmits(['send', 'stop'])
+const emit = defineEmits(['send', 'stop', 'upload-doc'])
 
 const text = ref('')
 const running = ref(false)

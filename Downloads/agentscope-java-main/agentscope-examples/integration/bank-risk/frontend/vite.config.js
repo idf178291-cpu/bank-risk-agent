@@ -6,7 +6,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/agui': 'http://localhost:8083',
-      '/mcp': 'http://localhost:8083'
+      '/mcp': 'http://localhost:8083',
+      '/api': 'http://localhost:8083'
     }
   },
   build: {

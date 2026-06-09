@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-    <RiskSidebar @quick-query="onQuickQuery" />
+    <RiskSidebar @upload-doc="showUploader = true" />
     <div class="main">
       <ChatHeader :status="agentStatus" />
       <ChatArea
@@ -10,8 +10,14 @@
         ref="chatInputRef"
         :disabled="isRunning"
         @send="sendMessage"
-        @stop="stopRun" />
+        @stop="stopRun"
+        @upload-doc="showUploader = true" />
     </div>
+    <FileUploader
+      :visible="showUploader"
+      :session-id="docSessionId"
+      @close="showUploader = false"
+      @uploaded="onFilesUploaded" />
   </div>
 </template>
 
@@ -22,6 +28,7 @@ import RiskSidebar from './components/RiskSidebar.vue'
 import ChatHeader from './components/ChatHeader.vue'
 import ChatArea from './components/ChatArea.vue'
 import ChatInput from './components/ChatInput.vue'
+import FileUploader from './components/FileUploader.vue'
 
 const { isRunning, run, abort } = useAguiClient('/agui/run')
 const chatInputRef = ref(null)
@@ -41,10 +48,16 @@ let currentToolResults = []
 let pendingAssistantMsg = null
 let finishedOnce = false
 
+const showUploader = ref(false)
+const docSessionId = ref(null)
+
 const displayMessages = computed(() => messages)
 
-function onQuickQuery(keyword) {
-  sendMessage('查询' + keyword + '行业的企业风险情况')
+function onFilesUploaded(data) {
+  showUploader.value = false
+  docSessionId.value = data.sessionId
+  const names = data.files.map(f => f.fileName).join('、')
+  sendMessage('已上传 ' + data.totalFiles + ' 个文件: ' + names + ', sessionId: ' + data.sessionId)
 }
 
 async function sendMessage(text) {

@@ -68,6 +68,12 @@
             <artifactId>mcp-spring-webflux</artifactId>
             <version>${mcp-sdk.version}</version>
         </dependency>
+
+        <!-- Apache POI for Word/Excel document parsing -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
