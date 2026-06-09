@@ -20,12 +20,14 @@ public class DataLoader {
     private final List<Map<String, Object>> enterprises;
     private final Map<String, Object> negativeNews;
     private final Map<String, Object> creditReports;
+    private final Map<String, Object> alerts;
 
     public DataLoader() {
         this.mapper = new ObjectMapper();
         this.enterprises = loadEnterprises();
         this.negativeNews = loadNegativeNews();
         this.creditReports = loadCreditReports();
+        this.alerts = loadAlerts();
     }
 
     @SuppressWarnings("unchecked")
@@ -78,6 +80,23 @@ public class DataLoader {
             return data;
         } catch (Exception e) {
             log.error("Failed to load credit_reports.json: {}", e.getMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> loadAlerts() {
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream("data/alerts.json")) {
+            if (in == null) {
+                log.error("alerts.json not found on classpath");
+                return Collections.emptyMap();
+            }
+            Map<String, Object> data =
+                    mapper.readValue(in, new TypeReference<Map<String, Object>>() {});
+            log.info("Loaded alerts for {} enterprises", data.size());
+            return data;
+        } catch (Exception e) {
+            log.error("Failed to load alerts.json: {}", e.getMessage());
             return Collections.emptyMap();
         }
     }
@@ -136,5 +155,13 @@ public class DataLoader {
      */
     public Object getCreditReport(String enterpriseName) {
         return creditReports.get(enterpriseName);
+    }
+
+    /**
+     * Returns alerts for enterprise from alerts.json.
+     * The returned value is a {@link List} of alert items (from JSON array), or null.
+     */
+    public Object getAlerts(String enterpriseName) {
+        return alerts.get(enterpriseName);
     }
 }

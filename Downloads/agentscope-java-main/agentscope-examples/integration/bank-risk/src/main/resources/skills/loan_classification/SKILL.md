@@ -1,6 +1,11 @@
 ---
 name: credit_rating_guide
-description: "Enterprise credit rating framework: AAA through D scale with rating criteria, common adjustment factors, and early warning signals for rating migration."
+description: >
+  [TRIGGER: 用户询问征信/信用评级/信用等级 — 只要用户仅关注征信或信用评估时使用]
+  [TOOLS: search_enterprises → 选企业 → query_credit_report(summary) → 对照评级标准输出等级]
+  [OUTPUT: 信用等级(AAA-D)/征信评分/违约概率/关键调整因子/评级迁移预警]
+  [PATH: 征信专题分析 — 快捷路径，跳过维度选择和舆情查询]
+  企业信用评级框架：AAA到D共9级，含评级定义/对应征信评分/违约概率/正负面调整因子/财务与非财务预警信号/行业风险调整上限。
 ---
 
 # 企业信用评级参考

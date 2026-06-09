@@ -1,5 +1,6 @@
 package io.agentscope.examples.bankrisk.config;
 
+import io.agentscope.examples.bankrisk.mcp.AlertSearchTool;
 import io.agentscope.examples.bankrisk.mcp.CreditReportTool;
 import io.agentscope.examples.bankrisk.mcp.DataLoader;
 import io.agentscope.examples.bankrisk.mcp.EnterpriseDetailTool;
@@ -34,6 +35,7 @@ public class McpServerConfig {
     private final EnterpriseDetailTool enterpriseDetailTool;
     private final RiskIndicatorTool riskIndicatorTool;
     private final GenerateReportTool generateReportTool;
+    private final AlertSearchTool alertSearchTool;
 
     public McpServerConfig(DataLoader dataLoader) {
         this.negativeNewsTool = new NegativeNewsTool(dataLoader);
@@ -42,6 +44,7 @@ public class McpServerConfig {
         this.enterpriseDetailTool = new EnterpriseDetailTool(dataLoader);
         this.riskIndicatorTool = new RiskIndicatorTool(dataLoader);
         this.generateReportTool = new GenerateReportTool(dataLoader);
+        this.alertSearchTool = new AlertSearchTool(dataLoader);
     }
 
     @Bean
@@ -172,10 +175,28 @@ public class McpServerConfig {
                     return new CallToolResult(result, false);
                 });
 
+        spec.tool(
+                new Tool(
+                        "search_alerts",
+                        null,
+                        "Search risk alerts (预警) for an enterprise. "
+                                + "Returns a list of alerts with alert name, category, level "
+                                + "(红色/橙色/蓝色), release time, detail, and verification "
+                                + "result. Supports optional filtering by alert_category "
+                                + "(信用类, 合规类, 操作类, 声誉类) and alert_level.",
+                        searchAlertsSchema(),
+                        null,
+                        null,
+                        null),
+                (ex, args) -> {
+                    String result = alertSearchTool.searchAlerts((Map<String, Object>) args);
+                    return new CallToolResult(result, false);
+                });
+
         log.info(
-                "MCP SyncServer registered with 6 tools: search_negative_news, "
+                "MCP SyncServer registered with 7 tools: search_negative_news, "
                         + "query_credit_report, search_enterprises, get_enterprise_detail,"
-                        + " calculate_risk_indicators, generate_risk_report");
+                        + " calculate_risk_indicators, generate_risk_report, search_alerts");
         return spec.build();
     }
 
@@ -249,6 +270,28 @@ public class McpServerConfig {
                                 + " dimensions."));
         return new JsonSchema(
                 "object", properties, List.of("enterprise_name", "dimensions"), null, null, null);
+    }
+
+    private static JsonSchema searchAlertsSchema() {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(
+                "enterprise_name",
+                Map.of("type", "string", "description", "Enterprise name to search alerts for"));
+        properties.put(
+                "alert_category",
+                Map.of(
+                        "type",
+                        "string",
+                        "description",
+                        "Optional filter by alert category: 信用类, 合规类, 操作类, 声誉类"));
+        properties.put(
+                "alert_level",
+                Map.of(
+                        "type",
+                        "string",
+                        "description",
+                        "Optional filter by alert level: 红色, 橙色, 蓝色"));
+        return new JsonSchema("object", properties, List.of("enterprise_name"), null, null, null);
     }
 
     private static JsonSchema generateRiskReportSchema() {

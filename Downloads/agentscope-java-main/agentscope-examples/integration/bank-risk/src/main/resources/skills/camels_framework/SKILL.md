@@ -1,6 +1,11 @@
 ---
 name: enterprise_risk_framework
-description: "Enterprise risk assessment framework covering 5 dimensions: Financial Health (F), Industry Position (I), Compliance & Reputation (C), Debt Risk (D), and Governance & Operations (G). Includes evaluation methods, benchmarks, and scoring criteria."
+description: >
+  [TRIGGER: 仅当用户明确要求综合评估/全维度分析/全面风险评估时触发 — 用户只说"查一下""风险情况"等模糊表述时不要匹配]
+  [TOOLS: search_enterprises → 选企业 → get_enterprise_detail → ask_user选择维度(F/I/C/D/G/ALL) → 根据维度组合调用对应专项分析 → 最后综合研判]
+  [OUTPUT: 按选定维度的分项评估，各维度独立结论，末尾给出综合风险等级(LOW/WATCH/HIGH/CRITICAL)]
+  [PATH: 综合评估 — 完整流程，需用户选择维度后再按维度分派到其他专项技能]
+  企业风险评估框架(FICDG)：F-财务健康(ROA/毛利率/经营现金流/营收增长率)权重25%，I-行业地位(市场份额/技术壁垒/客户结构/行业周期)权重20%，C-合规声誉(处罚/诉讼/失信/退市)权重20%，D-债务风险(资产负债率/流动比率/利息保障倍数)权重20%，G-运营治理(管理层稳定性/股权结构/供应链安全/内控)权重15%。
 ---
 
 # 企业风险评估框架 (FICDG)

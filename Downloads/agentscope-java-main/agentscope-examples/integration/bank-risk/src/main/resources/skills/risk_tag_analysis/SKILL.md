@@ -1,6 +1,11 @@
 ---
 name: risk_tag_analysis
-description: "Commercial bank customer risk tag analysis: per-tag risk judgment across warning levels (Red/Orange/Blue), RAD score, ESG classification (Red/Yellow/Blue), and asset classification (A1-E1), with management recommendations — no quantification or composite grading."
+description: >
+  [TRIGGER: 用户询问风险标签/预警/标签分析 — 只要用户关注标签维度的风险诊断时使用]
+  [TOOLS: search_enterprises → 选企业 → get_enterprise_detail → 逐标签分析]
+  [OUTPUT: 逐标签风险判定表格(标签名/当前值/风险信号/管理建议)，含交叉信号分析和标签迁移评估]
+  [PATH: 风险标签专题分析 — 快捷路径，跳过维度选择和征信查询]
+  商业银行客户风险标签分析：按预警等级(红/橙/蓝)/RAD分/ESG分类(红/黄/蓝)/资产分类(A1-E1)/通用风险标签五部分，逐项独立判定，不量化不加权，提供标签交叉分析和级别迁移处理指引。
 ---
 
 # 商业银行客户风险标签分析

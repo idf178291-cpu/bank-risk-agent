@@ -1,6 +1,11 @@
 ---
 name: regulatory_thresholds
-description: "Quantitative benchmark thresholds for enterprise risk indicators: profitability (ROA, ROE, gross margin), solvency (debt ratio, current ratio, interest coverage), operating efficiency (turnover days, cash flow), industry-specific reference values, and early warning trigger conditions."
+description: >
+  [TRIGGER: 用户询问财务指标/定量基准/指标对比/阈值 — 只要用户关注具体财务数据的达标分析时使用]
+  [TOOLS: search_enterprises → 选企业 → get_enterprise_detail → calculate_risk_indicators → 逐指标与基准对比]
+  [OUTPUT: 逐指标对比表格(指标名/当前值/行业基准/达标状态)，含预警触发条件检查]
+  [PATH: 指标专题分析 — 快捷路径，跳过维度选择和舆情查询，但需配合 enterprise_risk_framework 了解各维度权重]
+  企业风险指标定量基准：盈利能力(ROA/ROE/毛利率/净利率4档优秀-较差)/偿债能力(资产负债率/流动比率/速动比率/利息保障倍数/有息负债率3档安全-危险)/运营效率(周转天数/现金流比率)/行业参考阈值(6大行业特殊风险)。
 ---
 
 # 企业风险指标参考基准
