@@ -8,9 +8,11 @@ import java.util.zip.ZipInputStream;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -65,32 +67,71 @@ public class DocumentParserService {
                 Sheet sheet = wb.getSheetAt(i);
                 sb.append("\n## ").append(sheet.getSheetName()).append("\n\n");
 
-                // Find max column count for this sheet
+                int lastRow = sheet.getLastRowNum();
+                if (lastRow < 0) continue;
+
+                // Find max columns (including those only referenced by merged regions)
                 int maxCols = 0;
                 for (Row row : sheet) {
                     maxCols = Math.max(maxCols, row.getLastCellNum());
                 }
+                for (CellRangeAddress region : sheet.getMergedRegions()) {
+                    maxCols = Math.max(maxCols, region.getLastColumn() + 1);
+                }
                 if (maxCols == 0) continue;
 
-                boolean firstRow = true;
+                // Build 2D grid of cell text (filled by row,col)
+                String[][] grid = new String[lastRow + 1][maxCols];
                 for (Row row : sheet) {
-                    // Skip empty rows
-                    if (isEmptyRow(row, maxCols)) continue;
-
-                    sb.append("| ");
+                    int r = row.getRowNum();
                     for (int c = 0; c < maxCols; c++) {
-                        sb.append(getCellText(row.getCell(c))).append(" | ");
+                        grid[r][c] = getCellText(row.getCell(c));
                     }
-                    sb.append("\n");
+                }
 
-                    // Add markdown table separator after header row
-                    if (firstRow) {
-                        sb.append("|");
-                        for (int c = 0; c < maxCols; c++) {
-                            sb.append(" --- |");
+                // Fill values from merged regions into all covered cells
+                for (CellRangeAddress region : sheet.getMergedRegions()) {
+                    String value = null;
+                    Row topRow = sheet.getRow(region.getFirstRow());
+                    if (topRow != null) {
+                        value = getCellText(topRow.getCell(region.getFirstColumn()));
+                    }
+                    if (value == null || value.isBlank()) continue;
+                    for (int r = region.getFirstRow(); r <= region.getLastRow(); r++) {
+                        for (int c = region.getFirstColumn(); c <= region.getLastColumn(); c++) {
+                            if (grid[r][c] == null || grid[r][c].isBlank()) {
+                                grid[r][c] = value;
+                            }
                         }
-                        sb.append("\n");
-                        firstRow = false;
+                    }
+                }
+
+                // Output rows linearly: [行N] col1 | col2 | col3
+                // Consecutive empty rows are collapsed; large gaps get a section break
+                int consecutiveEmpty = 0;
+                for (int r = 0; r <= lastRow; r++) {
+                    boolean hasContent = false;
+                    StringBuilder line = new StringBuilder();
+                    line.append("[").append(r + 1).append("] ");
+                    for (int c = 0; c < maxCols; c++) {
+                        String val = grid[r][c];
+                        if (val != null && !val.isBlank()) {
+                            hasContent = true;
+                            if (!line.toString().endsWith("] ")) {
+                                line.append(" | ");
+                            }
+                            line.append(val);
+                        }
+                    }
+                    if (hasContent) {
+                        // If there was a large gap (>3 empty rows), insert a section break
+                        if (consecutiveEmpty > 3) {
+                            sb.append("\n--- 以下为新数据段 ---\n\n");
+                        }
+                        consecutiveEmpty = 0;
+                        sb.append(line).append("\n");
+                    } else {
+                        consecutiveEmpty++;
                     }
                 }
                 sb.append("\n");
@@ -98,15 +139,6 @@ public class DocumentParserService {
             wb.close();
         }
         return new ParsedDocument(fileName, "Excel", sb.toString());
-    }
-
-    private boolean isEmptyRow(Row row, int maxCols) {
-        if (row == null) return true;
-        for (int c = 0; c < maxCols; c++) {
-            Cell cell = row.getCell(c);
-            if (cell != null && !getCellText(cell).isBlank()) return false;
-        }
-        return true;
     }
 
     private ParsedDocument parseOfd(String fileName, byte[] bytes) throws IOException {
@@ -152,7 +184,16 @@ public class DocumentParserService {
         if (cell == null) return "";
         return switch (cell.getCellType()) {
             case STRING -> cell.getStringCellValue();
-            case NUMERIC -> String.valueOf(cell.getNumericCellValue());
+            case NUMERIC -> {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    yield cell.getLocalDateTimeCellValue().toLocalDate().toString();
+                }
+                double v = cell.getNumericCellValue();
+                if (v == Math.floor(v) && !Double.isInfinite(v)) {
+                    yield String.valueOf((long) v);
+                }
+                yield String.valueOf(v);
+            }
             case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
             case FORMULA -> cell.getCellFormula();
             default -> "";

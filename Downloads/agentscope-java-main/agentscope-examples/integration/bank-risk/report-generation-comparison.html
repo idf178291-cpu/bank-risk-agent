@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机构风险画像报告 — 提示词直出 vs 交互式技能生成</title>
+<style>
+  :root {
+    --bg: #f8f8f8; --card: #fff; --text: #2c2c2c; --text-muted: #777; --border: #e5e5e5;
+    --purple: #7c3aed; --purple-light: #f5f3ff; --purple-border: #ddd6fe;
+    --green: #059669; --green-light: #ecfdf5; --green-border: #a7f3d0;
+    --blue: #2563eb; --blue-light: #eff6ff;
+    --amber: #d97706; --amber-light: #fffbeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.8; padding: 48px 20px 80px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .hero { text-align: center; margin-bottom: 56px; }
+  .hero h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 16px; }
+  .hero .kicker { display: inline-block; background: #f0f0f0; color: #666; font-size: 13px; padding: 3px 14px; border-radius: 99px; margin-bottom: 16px; letter-spacing: 1px; }
+  .hero .subtitle { font-size: 16px; color: var(--text-muted); max-width: 680px; margin: 0 auto; line-height: 1.9; }
+
+  .section-title { font-size: 21px; font-weight: 700; margin: 56px 0 24px; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .section-title .num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #333; color: #fff; border-radius: 6px; font-size: 14px; flex-shrink: 0; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+
+  .mode-card { border-radius: 14px; padding: 32px 28px; position: relative; overflow: hidden; }
+  .mode-card.prompt { background: #2c2c2c; color: #ccc; }
+  .mode-card.prompt h3 { color: #fff; }
+  .mode-card.agent { background: var(--green-light); border: 1px solid var(--green-border); }
+  .mode-card h3 { font-size: 20px; margin-bottom: 8px; font-weight: 700; }
+  .mode-card .desc { font-size: 14px; margin-bottom: 20px; }
+  .mode-card.prompt .desc { color: #999; }
+  .mode-card.agent .desc { color: #555; }
+
+  .mode-card .tagline { display: inline-block; padding: 4px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; margin-bottom: 20px; }
+  .mode-card.prompt .tagline { background: #444; color: #ccc; }
+  .mode-card.agent .tagline { background: #d1fae5; color: #065f46; }
+
+  .card { background: var(--card); border-radius: 14px; padding: 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 15px 18px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: #fafafa; font-weight: 600; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; }
+  th:first-child { width: 20%; }
+  td:first-child { font-weight: 700; font-size: 15px; }
+
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 700; letter-spacing: 0.3px; }
+  .tag.b { background: #e5e5e5; color: #555; }
+  .tag.g { background: #d1fae5; color: #065f46; }
+  .tag.r { background: #fee2e2; color: #991b1b; }
+
+  .contrast-banner { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 32px 0; }
+  @media (max-width: 720px) { .contrast-banner { grid-template-columns: 1fr; } }
+  .contrast-card { border-radius: 14px; padding: 28px; text-align: center; }
+  .contrast-card.black { background: #1a1a1a; color: #aaa; }
+  .contrast-card.black h3 { color: #fff; }
+  .contrast-card.clear { background: #fff; border: 1px solid var(--border); }
+  .contrast-card .big-emoji { font-size: 48px; margin-bottom: 12px; }
+  .contrast-card h3 { font-size: 18px; margin-bottom: 8px; }
+
+  .flow-visual { margin: 20px 0; }
+  .flow-step { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 10px 16px; border-radius: 8px; font-size: 13px; }
+  .flow-step .step-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .flow-arrow { text-align: center; color: #999; font-size: 18px; line-height: 1; margin: 2px 0; }
+  .mode-card.prompt .flow-step { background: #3a3a3a; color: #ddd; }
+  .mode-card.prompt .step-icon { background: #555; color: #ccc; }
+  .mode-card.agent .flow-step { background: #fff; border: 1px solid #d1d5db; }
+  .mode-card.agent .step-icon { background: #d1fae5; color: #065f46; }
+
+  .highlight-box { padding: 16px 20px; border-radius: 8px; margin: 16px 0; font-size: 13px; line-height: 1.8; }
+  .highlight-box.warn { background: #fef9e7; border-left: 4px solid #f59e0b; color: #92400e; }
+  .highlight-box.good { background: #ecfdf5; border-left: 4px solid #059669; color: #065f46; }
+  .highlight-box.info { background: #eff6ff; border-left: 4px solid #2563eb; color: #1e40af; }
+
+  .principle { background: linear-gradient(135deg, #fafafa 0%, #f0fdf4 100%); border-radius: 14px; padding: 40px 36px; margin-top: 40px; text-align: center; }
+  .principle h3 { font-size: 22px; margin-bottom: 16px; }
+  .principle p { font-size: 16px; color: var(--text-muted); max-width: 640px; margin: 0 auto; line-height: 2; }
+  .principle .hl { font-weight: 700; color: #065f46; background: #d1fae5; padding: 1px 6px; border-radius: 3px; }
+  .principle .hl-dark { font-weight: 700; color: #555; background: #e5e5e5; padding: 1px 6px; border-radius: 3px; }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 24px 0; }
+  @media (max-width: 720px) { .metric-grid { grid-template-columns: 1fr 1fr; } }
+  .metric { background: var(--card); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border); }
+  .metric .value { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .metric .label { font-size: 12px; color: var(--text-muted); }
+  .metric.g .value { color: #059669; }
+  .metric.p .value { color: #7c3aed; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="kicker">INSTITUTION RISK PROFILING</div>
+    <h1>提示词直出 · 交互式技能生成</h1>
+    <p class="subtitle">
+      同一份机构风险画像报告，两种生成模式。<br>
+      <strong>提示词驱动直接生成</strong> vs <strong>当前项目交互式技能实现</strong>——<br>
+      差异不在报告本身，而在<strong>报告是怎么来的</strong>。
+    </p>
+  </div>
+
+  <!-- ========== 1. 本质差异 ========== -->
+  <div class="section-title"><span class="num">1</span> 本质差异：一步到位 vs 多步协作</div>
+
+  <div class="contrast-banner">
+    <div class="contrast-card black">
+      <div class="big-emoji">📄</div>
+      <h3>提示词驱动直接生成</h3>
+      <p style="font-size:14px; color:#888; margin-top:8px; line-height:1.8;">
+        把报告结构和分析方法论全部写在 system prompt 里，<br>
+        用户上传文档后，LLM <strong style="color:#ccc;">一次性输出完整报告</strong>。<br><br>
+        从输入到输出，<strong style="color:#fbbf24;">中间没有停顿</strong>，<br>没有交互，没有纠偏机会。
+      </p>
+    </div>
+    <div class="contrast-card clear">
+      <div class="big-emoji">🔍</div>
+      <h3>交互式技能驱动生成</h3>
+      <p style="font-size:14px; color:#555; margin-top:8px; line-height:1.8;">
+        技能定义了<strong>多步骤交互流程</strong>：<br>
+        上传→解析→逐文档提取→修改建议→最终报告+HTML 导出。<br><br>
+        每一步都是<strong style="color:#059669;">用户可参与、可干预、可修正</strong>的，<br>
+        报告是<strong>协作过程的产物</strong>，不是一次输出的结果。
+      </p>
+    </div>
+  </div>
+
+  <!-- ========== 2. 流程可视化 ========== -->
+  <div class="section-title"><span class="num">2</span> 同一个任务，两种流程</div>
+
+  <p style="color:var(--text-muted); font-size:14px; margin-bottom: 20px;">
+    假设场景：上传大鹏银行东海分行 6 份文档（审计报告、问题台账、处罚决定书、检查通报等），生成机构风险画像报告。
+  </p>
+
+  <div class="two-col">
+    <!-- 提示词直出 -->
+    <div class="mode-card prompt">
+      <h3>📄 提示词直出模式</h3>
+      <p class="desc">报告结构嵌在系统提示词里，用户提供输入，LLM 一次性输出</p>
+      <div class="tagline">1 次 LLM 调用，0 次用户交互</div>
+
+      <div class="flow-visual">
+        <div class="flow-step"><div class="step-icon">1</div> 用户上传文档 + 输入指令</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="step-icon">2</div> LLM 读取全部文档内容</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="step-icon">3</div> LLM 按系统提示词中嵌入的报告模板，一次性生成完整报告</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="step-icon">4</div> 报告直接展示在对话框中</div>
+      </div>
+
+      <div style="margin-top:16px; padding:12px; background:rgba(255,255,255,.05); border-radius:8px;">
+        <p style="font-size:12px; color:#777; text-align:center;">
+          ❓ 报告生成了，但<strong style="color:#fbbf24;">如果某个维度的分析不够深入</strong>？<br>
+          ❓ 如果<strong style="color:#fbbf24;">漏掉了某个文档里的关键信号</strong>？<br>
+          → 只能重新描述需求，让 LLM 重新生成。
+        </p>
+      </div>
+    </div>
+
+    <!-- 交互式技能 -->
+    <div class="mode-card agent">
+      <h3>🔍 交互式技能模式（当前实现）</h3>
+      <p class="desc">技能定义多步流程，每步可交互、可纠偏、可深挖</p>
+      <div class="tagline">6-8 次 LLM 调用，用户多次参与</div>
+
+      <div class="flow-visual">
+        <div class="flow-step"><div class="step-icon">1</div> 用户上传文档 → parse_documents 解析</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="step-icon">2</div> Agent 逐份文档提取风险信号，结构化输出</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="step-icon">3</div> ask_user 让用户选择：继续上传 / 修改建议 / 生成报告</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="step-icon">4</div> <strong>循环</strong>：用户可追加上传、提修改建议（多选推荐项 + 自定义输入）</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="step-icon">5</div> 生成完整报告（对话框展示）</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="step-icon">6</div> save_report_html → 返回可点击 URL</div>
+      </div>
+
+      <div style="margin-top:16px; padding:12px; background:#d1fae5; border-radius:8px;">
+        <p style="font-size:12px; color:#065f46; text-align:center;">
+          ✓ 逐文档提取确保<strong>不遗漏</strong>任何文件的信号<br>
+          ✓ 用户可以在中途<strong>干预方向</strong>、<strong>补充文档</strong><br>
+          ✓ 修改建议环节<strong>主动推荐</strong>可优化的方向<br>
+          ✓ HTML 报告可直接在浏览器打开查看
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 3. 代价对比 ========== -->
+  <div class="section-title"><span class="num">3</span> 量化对比</div>
+
+  <div class="metric-grid">
+    <div class="metric p"><div class="value">~3,000</div><div class="label">提示词模式 · 系统提示词 Token 数<br>（12 页方法论 + 模板全部嵌入）</div></div>
+    <div class="metric g"><div class="value">~400</div><div class="label">交互式模式 · 系统提示词 Token 数<br>（仅元指令，知识在 skill 文件里按需加载）</div></div>
+    <div class="metric p"><div class="value">1</div><div class="label">提示词模式 · LLM 调用次数<br>（一次性输出，失败则全部重来）</div></div>
+    <div class="metric g"><div class="value">6-8</div><div class="label">交互式模式 · LLM 调用次数<br>（每步独立，任意一步可单独重试）</div></div>
+    <div class="metric p"><div class="value">0</div><div class="label">提示词模式 · 用户交互次数<br>（输入→等待→接收）</div></div>
+    <div class="metric g"><div class="value">3-5</div><div class="label">交互式模式 · 用户交互次数<br>（确认机构、选择操作、修改建议）</div></div>
+    <div class="metric p"><div class="value">❌</div><div class="label">提示词模式 · 增量调整<br>（需重新生成整个报告）</div></div>
+    <div class="metric g"><div class="value">✅</div><div class="label">交互式模式 · 增量调整<br>（追加文档或修改建议后局部更新）</div></div>
+  </div>
+
+  <!-- ========== 4. 核心维度对比 ========== -->
+  <div class="section-title"><span class="num">4</span> 七个维度深度对比</div>
+
+  <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>维度</th>
+          <th><span class="tag b">提示词直接生成</span></th>
+          <th><span class="tag g">交互式技能生成</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>系统提示词</td>
+          <td><strong>极长</strong>。必须包含完整的报告结构模板、六大维度方法论、分类体系、输出格式约束——全部写在 system prompt 里，每次对话都携带完整上下文</td>
+          <td><strong>极短</strong>（10 行）。系统提示词只含角色 + 路由规则 + 交互规范。方法论和报告模板在 SKILL.md 里，<strong>按需加载</strong></td>
+        </tr>
+        <tr>
+          <td>文档解析</td>
+          <td>依赖 LLM 自身能力读取文档文本，无专门的解析管道。合并单元格、多表结构等复杂 Excel 需要 LLM 自行理解</td>
+          <td>专用 Java 解析管道（POI + ZIP/XML），合并单元格填值、多表分隔标记。Java 层做<strong>信息保全</strong>，LLM 做语义理解</td>
+        </tr>
+        <tr>
+          <td>过程可见性</td>
+          <td><strong>黑盒</strong>。用户输入 → 等待 → 报告出现。中间发生了什么，文档被怎么解读的，完全不可见</td>
+          <td><strong>显式思考链</strong>。每份文档单独提取摘要 → 用户可逐份审视 → 不满意可提修改建议 → 最终报告有完整的追溯链条</td>
+        </tr>
+        <tr>
+          <td>用户参与</td>
+          <td><strong>被动接收</strong>。报告的好坏完全取决于 prompt 写得多好和 LLM 当次表现。用户无法中途纠偏</td>
+          <td><strong>主动引导</strong>。Agent 列出修改建议的推荐方向（多选），用户可以聚焦某个维度、增加深度分析、调整方向，甚至追加文档重新分析</td>
+        </tr>
+        <tr>
+          <td>信息覆盖率</td>
+          <td><strong>取决于 LLM 单次理解能力</strong>。长文档可能被截断，多文档之间的交叉信号可能被遗漏。无法保证每份文件的每个信号都被提取</td>
+          <td><strong>逐文档强制提取</strong>。技能要求大文档量时逐份处理，每份输出结构化摘要，最后交叉合并。每份文档的贡献可追溯</td>
+        </tr>
+        <tr>
+          <td>增量迭代</td>
+          <td><strong>重置式</strong>。用户不满意需要重新描述需求 → LLM 重新生成整个报告。无法在已有分析基础上做增量修改</td>
+          <td><strong>增量式</strong>。用户选择修改建议后 Agent 在原有分析基础上补充或调整，不需要从头生成。支持追加文档后合并分析</td>
+        </tr>
+        <tr>
+          <td>HTML 报告导出</td>
+          <td>可以要求 LLM 在回复末尾输出完整 HTML 代码块，用户手动复制保存为 .html 文件</td>
+          <td>Agent 生成 HTML 后调用 save_report_html 工具保存到服务端，返回可点击 URL，用户直接在浏览器中打开</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ========== 5. 提示词模式要怎么写 ========== -->
+  <div class="section-title"><span class="num">5</span> 如果要用提示词直出模式，需要把什么塞进 system prompt？</div>
+
+  <div class="highlight-box warn">
+    <strong>⚠️ 提示词直出模式的代价</strong>：当前项目中 <code>institution_risk_profile/SKILL.md</code> 的 290 行方法论全部需要嵌入 system prompt，加上报告模板和 HTML 模板，system prompt 将达到 <strong>3,000+ Token</strong>。每次对话都携带这些内容，不管用户当前是否在做机构画像分析。
+  </div>
+
+  <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>需要嵌入的内容</th><th>来源</th><th>估算 Token</th></tr></thead>
+      <tbody>
+        <tr><td>角色定义</td><td>当前 SYS_PROMPT</td><td>~50</td></tr>
+        <tr><td>六维度风险分类体系（信用/操作/安全/合规/战略/声誉——每类的检查要点和具体内容）</td><td>SKILL.md 第二章</td><td>~600</td></tr>
+        <tr><td>逐文档提取方法论（大文档量时的处理方式）</td><td>SKILL.md 步骤 4</td><td>~200</td></tr>
+        <tr><td>修改建议交互逻辑（推荐方向列表 + 循环处理规则）</td><td>SKILL.md 第四章</td><td>~250</td></tr>
+        <tr><td>Markdown 报告强制性子标题结构（1.1~1.6, 2.1~2.6, 3.1~3.2, 4.1~4.6）</td><td>SKILL.md 第 5.1 节</td><td>~350</td></tr>
+        <tr><td>HTML 报告模板（完整的 CSS + HTML 结构）</td><td>SKILL.md 第 5.2 节</td><td>~900</td></tr>
+        <tr><td>文件上传和解析指令</td><td>需新增</td><td>~200</td></tr>
+        <tr><td>交互规范（ask_user select 等）</td><td>当前 SYS_PROMPT</td><td>~100</td></tr>
+        <tr><td><strong>合计</strong></td><td></td><td><strong>~2,650 Token</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="highlight-box info">
+    <strong>对比</strong>：当前交互式模式的 system prompt 仅 <strong>~400 Token</strong>（角色 + 路由 + 交互，10 行），其余知识全部在 SKILL.md 中按需通过 <code>load_skill_through_path</code> 加载。节省的 <strong>~2,250 Token 在每次对话中都有效</strong>——不管当前任务是不是机构画像分析。
+  </div>
+
+  <!-- ========== 6. 关键差异 ========== -->
+  <div class="section-title"><span class="num">6</span> 核心区别不是"能不能做"，而是"怎么做的"</div>
+
+  <div class="card">
+    <table style="font-size:15px;">
+      <thead>
+        <tr>
+          <th style="width:20%;"></th>
+          <th style="width:40%;"><span class="tag b">提示词直出</span></th>
+          <th style="width:40%;"><span class="tag g">交互式技能</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>本质</td><td>Ask → Answer<br><span style="color:var(--text-muted); font-size:13px;">用户给指令 → LLM 出报告</span></td><td>Ask → Parse → Extract → Review → Refine → Report<br><span style="color:var(--text-muted); font-size:13px;">用户上传 → 解析 → 提取 → 审视 → 调整 → 报告</span></td></tr>
+        <tr><td>知识位置</td><td>全部在 system prompt 中，<strong>每次对话必带</strong></td><td>在 SKILL.md 文件中，<strong>用时才加载</strong></td></tr>
+        <tr><td>LLM 调用</td><td>1 次大调用</td><td>6-8 次小调用（每步独立）</td></tr>
+        <tr><td>失败成本</td><td>高——重新生成整个报告</td><td>低——重试失败的那一步即可</td></tr>
+        <tr><td>文档处理</td><td>依赖 LLM 原生理解</td><td>Java 管道预处理 + LLM 语义理解</td></tr>
+        <tr><td>输出</td><td>一段 Markdown 文本</td><td>Markdown 报告 + 可点击 HTML 链接</td></tr>
+        <tr><td>信任基础</td><td>"我选择相信这份报告"</td><td>"我看到了每一步分析过程"</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="highlight-box good">
+    <strong>✓ 提示词直出适合</strong>：快速原型、非正式分析、文档量小的简单场景。"给我一份这个分行的风险画像"→几十秒出结果。<br><br>
+    <strong>✓ 交互式技能适合</strong>：正式报告、多文档综合分析、需要审计追溯的严肃场景。每一步的用户参与不是"麻烦"，而是<strong>质量保证机制</strong>。
+  </div>
+
+  <!-- ========== 7. 场景适配 ========== -->
+  <div class="section-title"><span class="num">7</span> 场景适配建议</div>
+
+  <div class="card" style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>场景</th><th>推荐模式</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>快速预览、文档量小（1-2 份）</td><td><span class="tag b">提示词直出</span></td><td>简单场景不需要多步交互，一次性生成即可</td></tr>
+        <tr><td>多文档综合分析（5+ 份）、文档量大</td><td><span class="tag g">交互式技能</span></td><td>逐文档提取防止遗漏，增量调整避免重新生成</td></tr>
+        <tr><td>嵌入正式风险审批流程</td><td><span class="tag g">交互式技能</span></td><td>每步可追溯，审批者能看到完整分析过程</td></tr>
+        <tr><td>需要向监管/审计提供分析依据</td><td><span class="tag g">交互式技能</span></td><td>每份文档的提取结果独立可查，来源可回溯</td></tr>
+        <tr><td>非正式探索、验证分析框架</td><td><span class="tag b">提示词直出</span></td><td>先用简单模式验证六维度分类是否合理，确认后固化为技能</td></tr>
+        <tr><td>需要生成排版可交付的 HTML 报告</td><td><span class="tag g">交互式技能</span></td><td>save_report_html 工具返回可点击 URL，可直接发给客户或领导</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ========== 8. 结语 ========== -->
+  <div class="principle">
+    <h3>从"生成报告"到"协作分析"</h3>
+    <p>
+      提示词直出模式让用户<span class="hl-dark">得到一份报告</span>；<br>
+      交互式技能模式让用户<span class="hl">参与报告的形成过程</span>。<br><br>
+      在银行风控这类严肃场景中，<br>
+      <strong>"报告可信"比"报告好看"更重要，<br>
+      "过程可见"比"结果快速"更重要。</strong><br><br>
+      交互式技能不是让系统"更智能"，<br>
+      而是<strong>把 AI 的分析能力拆解为可参与、可审视、可修正的步骤</strong>——<br>
+      最终产出的是<strong>人机协作的、有据可依的、可交付的风险画像报告</strong>。
+    </p>
+  </div>
+
+  <p style="text-align:center; color:#ccc; font-size:12px; margin-top:56px;">
+    institution-risk-profile · 2026-06-11
+  </p>
+
+</div>
+</body>
+</html>
